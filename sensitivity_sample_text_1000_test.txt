@@ -1,0 +1,345 @@
+Similarity 0.0~0.1:
+
+Similarity 0.1~0.2:
+
+Similarity 0.2~0.3:
+~ & 0.962 & 0.939 & 0.298 & forward & a person is walking forward. \\
+~ & 0.961 & 0.953 & 0.289 & forward & person is walking forward. \\
+~ & 0.964 & 0.933 & 0.269 & backward & a person is walking backwards. \\
+~ & 0.962 & 0.939 & 0.298 & forward & a person is walking forward. \\
+~ & 0.948 & 0.935 & 0.281 & forward & a person walks forward and stops \\
+~ & 0.951 & 0.927 & 0.243 & backward & a person walks backwards and stops. \\
+
+Similarity 0.3~0.4:
+~ & 0.978 & 0.927 & 0.383 & backward & walking backwards and then stopping. \\
+~ & 0.987 & 0.914 & 0.361 & backward & the man takes 4 steps backwards. \\
+~ & 0.962 & 0.833 & 0.335 & forward & a person walks forward from one end to the other. \\
+~ & 0.968 & 0.905 & 0.379 & backward & the person walks backwards in a straight line \\
+~ & 0.971 & 0.939 & 0.309 & forward & a man is walking forward \\
+~ & 0.982 & 0.577 & 0.394 & forward & a man walks forward and then turns to the right and continues to walk. \\
+~ & 0.971 & 0.724 & 0.325 & backward & a person walks backwards, then turns around then walks backwards again. \\
+~ & 0.960 & 0.950 & 0.377 & forward & a person slowly walked forward \\
+~ & 0.950 & 0.763 & 0.387 & forward & a person walks forward then turns to the left. \\
+~ & 0.960 & 0.870 & 0.333 & backward & a person walks backward for 3 steps. \\
+~ & 0.985 & 0.913 & 0.347 & backward & a man takes several steps backwards. \\
+~ & 0.960 & 0.950 & 0.377 & forward & a person slowly walked forward \\
+~ & 0.975 & 0.869 & 0.356 & slowly & a person walks very slowly forward. \\
+
+Similarity 0.4~0.5:
+~ & 0.957 & 0.909 & 0.449 & runs & the man runs back wards \\
+~ & 0.946 & 0.700 & 0.411 & forward & a person walks forward, then to the right and stops. \\
+~ & 0.979 & 0.337 & 0.495 & walks & a man walks foward ,makes a u turn to the right side ,walks and then stops. \\
+~ & 0.938 & 0.774 & 0.499 & forward & a person walks forward with his arms at his side slowly. \\
+~ & 0.967 & 0.727 & 0.471 & walking & a peraon walking makes a right turn. \\
+~ & 0.960 & 0.876 & 0.466 & forward & a person walks forward quickly and then stops \\
+~ & 0.979 & 0.930 & 0.462 & backward & a man steps backwards slowly. \\
+~ & 0.954 & 0.935 & 0.500 & walking & a person is walking forward. \\
+~ & 0.973 & 0.895 & 0.465 & forward & a person takes one large step forward. \\
+~ & 0.942 & 0.419 & 0.416 & walks & a man walks from side to side while holding his right forearm with left hand, and then walks back. \\
+~ & 0.964 & 0.786 & 0.499 & forward & a person walks forward while making small adjustments left and right \\
+~ & 0.983 & 0.944 & 0.475 & slowly & the man is walking slowly \\
+~ & 0.963 & 0.941 & 0.458 & forward & someone walking forward then stop \\
+~ & 0.951 & 0.769 & 0.482 & runs & a person runs forward in a non-linear way. \\
+~ & 0.947 & 0.936 & 0.487 & backward & a person walks backwards slowly. \\
+~ & 0.988 & 0.924 & 0.409 & forward & the sim takes a jump forward. \\
+~ & 0.956 & 0.870 & 0.422 & forward & a person walks forward in a straight line. \\
+~ & 0.975 & 0.667 & 0.414 & forward & the man walked forward, forming a forty-five degree angle. \\
+~ & 0.971 & 0.734 & 0.478 & walking & the person who’s walking diagonally to the right. \\
+~ & 0.943 & 0.837 & 0.447 & walking & the person is holding their head while walking. \\
+~ & 0.983 & 0.809 & 0.439 & forward & a man walks forward slightly angling to the left. \\
+~ & 0.960 & 0.848 & 0.462 & forward & a person takes a few steps forwards before stopping. \\
+~ & 0.981 & 0.488 & 0.432 & backward & a person walks backwards 6 1/2 steps, turns around and returns walking backwards 7 steps. \\
+~ & 0.970 & 0.774 & 0.467 & forward & a man walks forward, canting slightly to the right. \\
+~ & 0.974 & 0.911 & 0.415 & backward & a person is walking backwards slowly. \\
+~ & 0.954 & 0.935 & 0.500 & walking & a person is walking forward. \\
+~ & 0.970 & 0.934 & 0.480 & walking & someone walking forward then stop \\
+~ & 0.948 & 0.796 & 0.419 & walks & a person walks forward from one end to the other. \\
+~ & 0.954 & 0.942 & 0.457 & forward & a person walks forwards, sits. \\
+~ & 0.970 & 0.928 & 0.422 & backward & a person walks backwards on their toes. \\
+~ & 0.966 & 0.907 & 0.413 & forward & a person continuously walks forward. \\
+~ & 0.964 & 0.887 & 0.473 & walking & a person is walking foward. \\
+~ & 0.974 & 0.887 & 0.440 & backward & walking backwards in a diagonal line. \\
+~ & 0.974 & 0.907 & 0.498 & forward & the person was walking forward slowly. \\
+~ & 0.956 & 0.931 & 0.412 & forward & a person slowly walks forward. \\
+~ & 0.956 & 0.931 & 0.412 & forward & a person slowly walks forward. \\
+~ & 0.953 & 0.884 & 0.444 & forward & a person runs forward and then stops \\
+~ & 0.971 & 0.879 & 0.400 & forward & a person takes a few steps forward then stops \\
+~ & 0.978 & 0.851 & 0.451 & walking & it is someone walking across the room. \\
+~ & 0.964 & 0.820 & 0.458 & forward & a person walks several steps forward in a straight line. \\
+~ & 0.978 & 0.929 & 0.493 & running & someone running forward, moving forward \\
+~ & 0.967 & 0.944 & 0.432 & forward & the man moves forward slowly \\
+~ & 0.956 & 0.899 & 0.462 & backward & a person is waling backwards. \\
+~ & 0.983 & 0.685 & 0.413 & forward & a person, walked forward by changing direcion into left and right \\
+~ & 0.986 & 0.855 & 0.470 & forward & walking forward with legs wide apart. \\
+~ & 0.961 & 0.815 & 0.480 & forward & a person walks forward carefully with arms extended. \\
+~ & 0.952 & 0.875 & 0.498 & walks & a person walks very slowly forward. \\
+~ & 0.973 & 0.899 & 0.482 & backward & a person takes one large step backwards. \\
+~ & 0.967 & 0.915 & 0.426 & backward & the person was pushed backwards. \\
+~ & 0.962 & 0.728 & 0.422 & forward & someone running forward, moving forward \\
+~ & 0.981 & 0.946 & 0.439 & forward & person walks forward and scratches leg \\
+
+Similarity 0.5~0.6:
+~ & 0.982 & 0.800 & 0.566 & forward & this person walks clumsy while moving forward. \\
+~ & 0.947 & 0.913 & 0.518 & walks & person walks forward and to the right \\
+~ & 0.972 & 0.753 & 0.595 & walking & a person walking forward before turning clockwise to stare down a ledge. \\
+~ & 0.974 & 0.923 & 0.553 & forward & man takes a step forward and almost falls \\
+~ & 0.945 & 0.955 & 0.509 & forward & a person jumps forward once. \\
+~ & 0.960 & 0.906 & 0.549 & forward & person walks forward and to the right \\
+~ & 0.966 & 0.688 & 0.536 & forward & a man walks forward briskly, with arms swaying at his sides. \\
+~ & 0.986 & 0.631 & 0.575 & forward & a person, slowly walked forward, and after made circle with right hand \\
+~ & 0.953 & 0.826 & 0.598 & walks & a person walks forward then turns to the left. \\
+~ & 0.944 & 0.850 & 0.550 & walks & a person walks forward carefully with arms extended. \\
+~ & 0.916 & 0.330 & 0.561 & walks & the figure walks forward a couple steps, turns right 180 degrees and then walks back to the originally starting point. \\
+~ & 0.977 & 0.703 & 0.599 & walks & a person walks forward to the left, picks something up and walks back and then shakes what is in the hand. \\
+~ & 0.965 & 0.938 & 0.530 & forward & a person walks forward up stairs \\
+~ & 0.955 & 0.891 & 0.581 & walks & a person walks to his right. \\
+~ & 0.989 & 0.928 & 0.537 & slowly & a man walks slowly forwards, stepping widely to the left and right. \\
+~ & 0.936 & 0.920 & 0.550 & walks & a person slowly walks forward. \\
+~ & 0.925 & 0.836 & 0.593 & walks & a person walks forward in a straight line. \\
+~ & 0.979 & 0.738 & 0.529 & forward & the person is walking forward and then back the other direction. \\
+~ & 0.969 & 0.876 & 0.589 & walks & a person walks around in a clockwise direction. \\
+~ & 0.959 & 0.882 & 0.567 & walking & walking forward with legs wide apart. \\
+~ & 0.984 & 0.848 & 0.520 & forward & a man is walking forward in a hurry \\
+~ & 0.985 & 0.908 & 0.532 & forward & walking forward and then bending down. \\
+~ & 0.984 & 0.801 & 0.584 & walking & a person walking forward swinging their right arm and then turns around \\
+~ & 0.971 & 0.964 & 0.585 & slowly & a person slowly paces back and forth. \\
+~ & 0.985 & 0.786 & 0.567 & forward & person walks forward in straight line 4 steps and then stops. \\
+~ & 0.956 & 0.818 & 0.567 & walks & a man walks forward slightly angling to the left. \\
+~ & 0.958 & 0.647 & 0.556 & walks & a person walks forward, takes large step with right leg then slowly walks back to the left. \\
+~ & 0.979 & 0.924 & 0.562 & slowly & a person slowly walks forward. \\
+~ & 0.967 & 0.857 & 0.558 & walks & a person walks and turns to his left. \\
+~ & 0.980 & 0.279 & 0.546 & walks & man walks forwards, pivots back in a half turn to the right, and walks back the way he came. \\
+~ & 0.944 & 0.879 & 0.600 & walks & a person walks forward with a slight limp. \\
+~ & 0.964 & 0.711 & 0.564 & walks & a figure walks forward then spins on their heel and walks back \\
+~ & 0.986 & 0.731 & 0.567 & backward & a person moving backwards anti clock wise while drawing a line with its feat \\
+~ & 0.938 & 0.929 & 0.551 & walking & the man is walking slowly \\
+~ & 0.956 & 0.829 & 0.579 & running & person is running from side to side \\
+~ & 0.984 & 0.741 & 0.528 & forward & a person walking forward swinging their right arm and then turns around \\
+~ & 0.968 & 0.814 & 0.597 & forward & a person walks forward and climbs up two steps with both hands by their sides. \\
+~ & 0.964 & 0.744 & 0.555 & backward & the person is running backwards quickly. \\
+~ & 0.962 & 0.699 & 0.552 & walks & this person walks forward and picks something up then walks back. \\
+~ & 0.982 & 0.882 & 0.538 & forward & a person slowly walked forward and sat on something \\
+~ & 0.971 & 0.914 & 0.576 & forward & the person is walking slowly forward. \\
+~ & 0.944 & 0.743 & 0.522 & walks & a man walks forward, canting slightly to the right. \\
+~ & 0.956 & 0.924 & 0.548 & forward & a person stands forward and doing the call with his right arm. \\
+~ & 0.989 & 0.616 & 0.586 & forward & a person is walking forward and then swiftly turns right and starts walking sideways. \\
+~ & 0.985 & 0.609 & 0.559 & forward & a person walks forward, stepping over an object, then continuing to walk and stop after. \\
+~ & 0.990 & 0.938 & 0.543 & slowly & the person was walking forward slowly. \\
+~ & 0.962 & 0.408 & 0.583 & walks & a person walks forward with arms at their sides, turns around, and walks back while lifting their arms to their belly. \\
+~ & 0.968 & 0.927 & 0.581 & forward & a person walks diagonally forward \\
+~ & 0.969 & 0.916 & 0.562 & walks & a person walks and turns right \\
+~ & 0.938 & 0.921 & 0.585 & walks & a person walks forward and stops \\
+~ & 0.972 & 0.730 & 0.580 & forward & person walks forward then turn around to the right and walks back \\
+
+Similarity 0.6~0.7:
+~ & 0.946 & 0.891 & 0.629 & walking & person is walking normally in a circle \\
+~ & 0.975 & 0.626 & 0.675 & walks & a person walks forward, bends down, picks something up and moves it, gets back up and walks back. \\
+~ & 0.970 & 0.355 & 0.613 & walks & a man turns to the right and walks by the sides to the right and then to the left . \\
+~ & 0.979 & 0.968 & 0.603 & slowly & a person slowly walked forward \\
+~ & 0.988 & 0.992 & 0.648 & quickly & the man runs quickly fron the top to the bottom. \\
+~ & 0.975 & 0.270 & 0.676 & forward & a person standing with his arms at his sides steps forward two steps, turns 180 degrees, steps forward two steps and stops. \\
+~ & 0.975 & 0.885 & 0.664 & walking & bending down and walking around. \\
+~ & 0.977 & 0.885 & 0.607 & forward & a person steps forward, reaches forward with their left arm and moves hand from right to left, then steps backwards. \\
+~ & 0.954 & 0.930 & 0.600 & walks & a person walks backwards and stops. \\
+~ & 0.979 & 0.800 & 0.652 & forward & a person walks forward six steps sluggishly. \\
+~ & 0.964 & 0.851 & 0.629 & walks & a person walks in a circle, clockwise.. \\
+~ & 0.968 & 0.827 & 0.614 & walks & someone walks forward turn right and stop \\
+~ & 0.979 & 0.668 & 0.672 & forward & a person walks forward slowly, while their left hand is slightly elevated. \\
+~ & 0.979 & 0.803 & 0.614 & walks & a person walks forward six steps sluggishly. \\
+~ & 0.986 & 0.564 & 0.688 & walks & a person walks forward and bends down and grabs his left knee in pain. he attempts to straighten up and walk forward and then bends down to grab his knee again. he then walks backward to his left. \\
+~ & 0.954 & 0.663 & 0.666 & walking & man walking in a circle to his right (clockwise) \\
+~ & 0.963 & 0.768 & 0.642 & walking & walking forward and then bending down. \\
+~ & 0.985 & 0.903 & 0.673 & walking & a person is holding their right arm to their head and then returns it back to side several times while walking in clockwise circle. \\
+~ & 0.985 & 0.659 & 0.657 & walks & a man walks 4 paces forward, then wipes his feet on the ground. \\
+~ & 0.972 & 0.847 & 0.671 & walks & a person walks backward for 3 steps. \\
+~ & 0.986 & 0.671 & 0.684 & walking & someone is walking forward and holding a handrail very carefully, as if they are afraid of falling. \\
+~ & 0.975 & 0.724 & 0.640 & running & a person places an object on the ground before running forward. \\
+~ & 0.994 & 0.789 & 0.698 & walks & a person walks up to a backwards chair and sits down on it with legs outstretched, then stands back up. \\
+~ & 0.985 & 0.851 & 0.678 & walks & man walks along, then bends down and picks something up. \\
+~ & 0.975 & 0.559 & 0.699 & walks & a person walks forward and bends over to pick something up, then walks forward more and places the object on a table \\
+~ & 0.980 & 0.790 & 0.690 & walks & person walks forward in straight line 4 steps and then stops. \\
+~ & 0.981 & 0.839 & 0.662 & walking & a man crouches down while quickly walking forward and then stands up straight. \\
+~ & 0.985 & 0.301 & 0.637 & forward & a person walks forward one foot in front of the other until he loses his balance and tilts far to the left then stumbles to his left. \\
+~ & 0.967 & 0.973 & 0.673 & walking & a person walking down something fast. \\
+~ & 0.974 & 0.981 & 0.681 & forward & the person steps forward and uses the left leg to kick something forward. \\
+~ & 0.945 & 0.844 & 0.658 & walks & a person walks to the right holding object on head. \\
+~ & 0.971 & 0.790 & 0.626 & forward & a person walks forward, spins around and walks back. \\
+~ & 0.963 & 0.434 & 0.654 & walks & the person walks to his left, walks back to his right, and turns back to his left again and returns to his original position. \\
+~ & 0.986 & 0.996 & 0.651 & slowly & a person slowly waves with their left hand twice \\
+~ & 0.986 & 0.906 & 0.660 & forward & a figure struts forward confidently \\
+~ & 0.960 & 0.930 & 0.667 & walking & person is walking with handrail assistance \\
+~ & 0.975 & 0.822 & 0.629 & walking & someone walking then sitting down in a chair. \\
+~ & 0.968 & 0.819 & 0.695 & walks & a person walks backward in a counterclockwise circle \\
+~ & 0.983 & 0.425 & 0.666 & walks & a man brings his arms down, turns to his left and walks, then turns around and walks again, turns and continues walking, then turns one final time as he stops in a standing position. \\
+~ & 0.956 & 0.954 & 0.680 & walks & a person walks forward up stairs \\
+~ & 0.970 & 0.753 & 0.652 & walking & the person is walking around. \\
+~ & 0.986 & 0.403 & 0.604 & forward & a person walks forward, takes large step with right leg then slowly walks back to the left. \\
+~ & 0.986 & 0.502 & 0.658 & walks & person walks for swings around on their list food then walks back to where they started. \\
+~ & 0.971 & 0.938 & 0.617 & forward & a person jumps forward a few inches. \\
+~ & 0.957 & 0.793 & 0.671 & walks & a man walks in a circle. \\
+~ & 0.981 & 0.867 & 0.694 & walks & a person walks up and tosses something. \\
+~ & 0.990 & 0.996 & 0.658 & slowly & a person slowly jumped forward \\
+~ & 0.976 & 0.817 & 0.699 & forward & a person leaps forwards, then leaps to the left, and then to the right. \\
+~ & 0.963 & 0.774 & 0.609 & walks & a person walks while slowly swaying their hands and arms. \\
+~ & 0.973 & 0.899 & 0.622 & forward & a person takes one step forward towards the right \\
+~ & 0.981 & 0.296 & 0.637 & forward & man walks forwards, pivots back in a half turn to the right, and walks back the way he came. \\
+
+Similarity 0.7~0.8:
+~ & 0.978 & 0.844 & 0.702 & runs & the man puts the box down and runs \\
+~ & 0.991 & 0.855 & 0.759 & slowly & a person walks while slowly swaying their hands and arms. \\
+~ & 0.986 & 0.337 & 0.744 & walks & a person takes two steps forward, then walks sideways three steps, then walks forward diagonally and to the left three steps. \\
+~ & 0.979 & 1.000 & 0.795 & right & a person lifts a weight with their right hand \\
+~ & 0.984 & 0.984 & 0.767 & quickly & a man quickly runs forward. \\
+~ & 0.990 & 0.980 & 0.767 & slowly & a person slowly walks sideways from right to left. \\
+~ & 0.955 & 0.869 & 0.756 & forward & a man walks forward, then squats to pick something up with both hands, stands back up, and resumes walking. \\
+~ & 0.991 & 1.000 & 0.797 & right & person took his right hand to his mouth \\
+~ & 0.978 & 0.616 & 0.704 & walks & a person touches something low to the ground using their right hand, then walks forward. \\
+~ & 0.979 & 0.971 & 0.748 & forward & man walking in leaning forward position moving head from side to side. \\
+~ & 0.987 & 1.000 & 0.768 & left & a person reaches his left arm straight out \\
+~ & 0.989 & 0.999 & 0.777 & left & a person walks and turns to his left. \\
+~ & 0.977 & 0.986 & 0.794 & forward & a person who is standing with his hands by his sides steps forward with his right foot, kicks out with his left foot and then steps back to his original position. \\
+~ & 0.951 & 0.838 & 0.712 & runs & this person runs and ducks under something. \\
+~ & 0.998 & 0.749 & 0.742 & forward & this person moves both arms out to his sides in a large circular motion then walks forward. \\
+~ & 0.986 & 0.982 & 0.745 & forward & a person takes a step forward with their left foot, kicks something with their right foot, and pulls their right and left foot back. \\
+~ & 0.981 & 0.795 & 0.757 & walking & the toon walks forward a few steps, then turns around walking back. \\
+~ & 0.979 & 0.982 & 0.780 & slowly & a person, slowly walked forward, and after made circle with right hand \\
+~ & 0.982 & 0.972 & 0.706 & quickly & a person walks quickly sideways leading with right leg. \\
+~ & 0.966 & 0.875 & 0.738 & forward & a person places an object on the ground before running forward. \\
+~ & 0.969 & 0.904 & 0.752 & walks & a figure walks forward and gives a sligh kick with thr left foot before stepping backward to the starting position. \\
+~ & 0.981 & 1.000 & 0.786 & right & a person raises his right arm and then lowers it. \\
+~ & 0.981 & 0.722 & 0.742 & walks & a person walks up stairs turns left and walks back down stairs. \\
+~ & 0.990 & 0.989 & 0.767 & quickly & a person quickly sidesteps to the left and regains balance. \\
+~ & 0.984 & 0.913 & 0.755 & forward & a person walks forward to the left, picks something up and walks back and then shakes what is in the hand. \\
+~ & 0.987 & 0.990 & 0.759 & forward & a person stretches their arms, then swings their left arm forward making a few circles \\
+~ & 0.987 & 0.906 & 0.788 & forward & stick figure bends over picks somthing up then starts walking forward \\
+~ & 0.994 & 1.000 & 0.794 & right & a person brings their right hand up to their face with the palm facing forward as if examining it and then brings their arm back to their side. \\
+~ & 0.986 & 0.842 & 0.719 & forward & this person walks forward and picks something up then walks back. \\
+~ & 0.993 & 0.507 & 0.769 & walks & a man stands on the ground, turns half way around counter-clockwise walks away 8 steps and turns back around. \\
+~ & 0.997 & 0.984 & 0.789 & quickly & a person walks forward and then shuffles quickly to the right and then walks diagonally forward. \\
+~ & 0.974 & 0.843 & 0.713 & walks & a person walks forward and climbs up two steps with both hands by their sides. \\
+~ & 0.982 & 0.921 & 0.752 & walks & person walks forward and scratches leg \\
+~ & 0.992 & 0.327 & 0.757 & forward & a person is slowly walking forward with big steps, stops then turns around anticlockwise and starts to walk back \\
+~ & 0.985 & 0.936 & 0.750 & forward & a figure walks forward then spins on their heel and walks back \\
+~ & 0.989 & 0.977 & 0.743 & forward & the right hand flings forward to the left side, the left hand meets the right hand, and is drag back right the shoulder. \\
+~ & 0.987 & 0.998 & 0.776 & forward & a person stands right leg forward in a karate pose, leans forward and makes a high karate kick with their left leg and returns to the karate pose. \\
+~ & 0.994 & 0.495 & 0.773 & walking & a person is slowly walking forward with big steps, stops then turns around anticlockwise and starts to walk back \\
+~ & 0.984 & 0.324 & 0.761 & forward & man walks forward while upper body is leaning slightly to the left and steps are unbalanced and slow. \\
+~ & 0.991 & 0.676 & 0.757 & walks & a man walks forward, then squats to pick something up with both hands, stands back up, and resumes walking. \\
+~ & 0.974 & 0.929 & 0.747 & walking & a man holds a railing to his right while walking up stairs. \\
+~ & 0.987 & 1.000 & 0.755 & right & a person scratches his head with his right hand. \\
+~ & 0.984 & 1.000 & 0.711 & right & a person throws something with their right hand. \\
+~ & 0.994 & 0.875 & 0.730 & walks & a person shakes arms to lossen up then walks backwads, then moves forward with the right arm in a swiming motion \\
+~ & 0.986 & 0.741 & 0.767 & walks & a person walks forward quickly and leaves a trail behind them as if they are dripping paint \\
+~ & 0.991 & 0.769 & 0.717 & forward & a person slightly bent over with left hand pressing against the air walks forward slowly \\
+~ & 0.977 & 1.000 & 0.780 & right & a person stands while raising their right hand, bending by the elbow, to their facial area, pauses, and puts their right arm back down. \\
+~ & 0.965 & 0.994 & 0.787 & forward & a person leans forward and uses sweeping motion, sweeping from person's left to right \\
+~ & 0.991 & 0.809 & 0.799 & forward & the man spins around then walks forward then back \\
+~ & 0.996 & 1.000 & 0.794 & left & the sim is standing, raises their left arm to make a windmill motion. \\
+~ & 0.954 & 0.775 & 0.751 & walks & a man walks forward briskly, with arms swaying at his sides. \\
+
+Similarity 0.8~0.9:
+~ & 0.986 & 1.000 & 0.858 & left & a person turns to their left while leaping forward. \\
+~ & 0.977 & 0.992 & 0.889 & left & a person berings their left arm forward and swipes right to left \\
+~ & 0.981 & 1.000 & 0.806 & right & a person raises his right hand to his head and then lowers it back to his side. \\
+~ & 0.994 & 1.000 & 0.898 & right & a person swings his arms, twists and kicks out with his right foot. \\
+~ & 0.993 & 1.000 & 0.828 & right & someone raises their right arm and then puts it back down \\
+~ & 0.996 & 0.976 & 0.899 & walks & a man sidesteps suddenly to his right, bumps into something and leans over, looks around, then walks to his right, bumping into something else and once more leaning over. \\
+~ & 0.994 & 0.999 & 0.880 & left & a person starts with their arms at waist height then moves slightly left and right. \\
+~ & 0.981 & 0.876 & 0.890 & walks & a person jumps in the air, spinning in a complete circle, walks forward, then walks backwards. \\
+~ & 0.965 & 1.000 & 0.872 & right & a person makes a step to the right. \\
+~ & 0.997 & 0.723 & 0.850 & slowly & a person slowly walks forward with spine slightly hunched forward,  turns around to their right and walks forward some more in the other direction, and then turns around to their right and walks forward again \\
+~ & 0.995 & 0.998 & 0.839 & right & the person is walking fast to the right. \\
+~ & 0.991 & 0.939 & 0.847 & walking & a person uses a hand rail while walking up and then down a flight of stairs. \\
+~ & 0.993 & 1.000 & 0.867 & right & a person brings their right arm up and bends their elbow so it is across their stomach. \\
+~ & 0.991 & 0.602 & 0.862 & forward & person walking at a average pace forward, swaying arms and torso with a sense of swagger \\
+~ & 0.997 & 1.000 & 0.864 & right & the person who does arms straight out and then it’s doing something with their right hand in front of their face. \\
+~ & 0.981 & 0.990 & 0.848 & slowly & a person slowly kicks with their right leg. \\
+~ & 0.979 & 1.000 & 0.900 & right & a person takes one step forward towards the right \\
+~ & 0.970 & 0.969 & 0.817 & forward & person moves their body and kicks with right foot forward \\
+~ & 0.983 & 0.951 & 0.877 & clockwise & a man is slowly moving clockwise. his right and left arms are raised to the chest as if he was ready to fight \\
+~ & 0.997 & 1.000 & 0.877 & right & the person kick his right foot up and both hands up in clockwise circle and stop. \\
+~ & 0.978 & 1.000 & 0.898 & left & a person walks forward then turns to the left. \\
+~ & 0.988 & 0.768 & 0.800 & walks & a person walks forward, stepping over an object, then continuing to walk and stop after. \\
+~ & 0.995 & 0.910 & 0.833 & walking & figure walks forward then zags to left before walking right. \\
+~ & 0.990 & 1.000 & 0.845 & left & the man is drinking with his left hand \\
+~ & 0.990 & 0.806 & 0.813 & forward & a person slightly crouches down and walks forward then back, then around slowly. \\
+~ & 0.986 & 0.966 & 0.806 & slowly & a man steps backwards slowly. \\
+~ & 0.992 & 1.000 & 0.855 & right & a person slowly kicks with their right leg. \\
+~ & 0.992 & 1.000 & 0.881 & right & a person touches his chest with his right hand and then lowers his hand. \\
+~ & 0.956 & 1.000 & 0.820 & left & a person punches left a few times. \\
+~ & 0.993 & 0.998 & 0.900 & right & the person pick something up and put it on the right. \\
+~ & 0.993 & 1.000 & 0.890 & right & a person walks to the right holding object on head. \\
+~ & 0.990 & 1.000 & 0.826 & right & a man jumps to his right. \\
+~ & 0.987 & 1.000 & 0.897 & left & a person walks forward slowly, while their left hand is slightly elevated. \\
+~ & 0.992 & 0.984 & 0.824 & forward & the body bends over to touch the toes and stands back up pushing the arms forward. \\
+~ & 0.995 & 1.000 & 0.868 & left & the figure raises its left arm and makes reaching motions as if grabbing for something, and then extends its arms twice. \\
+~ & 0.992 & 0.753 & 0.852 & forward & a hunched individual slowly wobbles forward in a drunken manner. \\
+~ & 0.995 & 0.990 & 0.892 & slowly & a person walks forward, takes large step with right leg then slowly walks back to the left. \\
+~ & 0.991 & 1.000 & 0.828 & right & a man swings his right arm back repeatedly. \\
+~ & 0.993 & 1.000 & 0.815 & right & a person kicks their right leg up twice while hopping between feet, then punches their right arm \\
+~ & 0.991 & 0.961 & 0.844 & forward & a person jumps forward, turns around 90 degrees to their right and jumps again, they turn again 90 degrees to their left and jump back to their starting position. \\
+~ & 0.998 & 0.992 & 0.862 & quickly & a person quickly puts both hands down while walking in a clockwise half circle, then climbs imaginary stairs with both arms and legs, and finally pulls his head above his arms using his hands. \\
+~ & 0.989 & 1.000 & 0.801 & right & a person throws something hard with their right arm. \\
+~ & 0.979 & 0.955 & 0.807 & walking & the man looks to shake someone's hand before giving a wave with his right hand and walking out. \\
+~ & 0.992 & 1.000 & 0.889 & left & a person walks in a s shape route to the left. \\
+~ & 0.994 & 0.911 & 0.871 & walks & a person drops his arms, claps his hands together, then walks four steps to his right and sits down. \\
+~ & 0.983 & 0.977 & 0.827 & walks & the man crab walks backwards and then rolls around a few times. \\
+~ & 0.993 & 1.000 & 0.879 & right & a person stands while moving their right arm as if eating something with a spoon or fork three times. \\
+~ & 0.977 & 1.000 & 0.829 & left & a person stirs something with their left hand \\
+~ & 0.962 & 0.997 & 0.809 & forward & a person bows forward to their waist somewhat slowly. \\
+~ & 0.995 & 0.895 & 0.889 & quickly & this person swings both arms as though he is doing a workout, and moves quickly with his whole body. \\
+~ & 0.994 & 1.000 & 0.809 & right & person raises right arm to shoulder height and then lowers it back down by side \\
+
+Similarity 0.9~1.0:
+~ & 0.979 & 0.979 & 0.966 & clockwise & an idividual in compat position wirh right leg and arm placed forward is truning clockwise while holdinf the position. \\
+~ & 0.990 & 1.000 & 0.929 & left & a man lifts and bends his left leg, then his right leg. \\
+~ & 0.986 & 1.000 & 0.943 & right & a person kneels three times to the right \\
+~ & 0.998 & 1.000 & 0.933 & left & the body slides to the left. \\
+~ & 0.998 & 1.000 & 0.974 & left & person is bent down trying to pick up stuff, left arm is moved to the back, picks up more stuff and touches back again while bending down \\
+~ & 0.998 & 1.000 & 0.979 & left & a person walks diagonally to the left, bends over and picks up a few items, then continues walking \\
+~ & 0.998 & 1.000 & 0.955 & right & a person takes a step forward, squats down, places their right hand on the ground in front of them, moves their hand slightly counter clockwise then stands up. \\
+~ & 0.992 & 1.000 & 0.902 & right & a person raises his right arm to drink something. \\
+~ & 0.993 & 1.000 & 0.917 & left & a person is dancing and starts to take a drink with their left hand. \\
+~ & 0.996 & 0.903 & 0.909 & walks & the person dodges something that was going to hit their head, then walks around and bends down a little and holds their head. \\
+~ & 0.996 & 0.989 & 0.936 & backward & a man steps to the left steps in a small clockwise circle throws left arm then steps in a larger backward clockwise circle \\
+~ & 0.997 & 0.998 & 0.963 & left & a man stretches his right arm forward and then stretches out his left arm multiple times. \\
+~ & 0.980 & 0.999 & 0.922 & left & a person leans to the right, then the left and then moves their right foot out and then their left foot out. \\
+~ & 0.995 & 1.000 & 0.938 & left & person looks to his right, then to his left \\
+~ & 0.998 & 0.999 & 0.969 & left & a man is slowly moving clockwise. his right and left arms are raised to the chest as if he was ready to fight \\
+~ & 0.994 & 1.000 & 0.950 & left & the person was sliding from right to left. \\
+~ & 0.968 & 1.000 & 0.950 & left & a person idles and walks right to left and back. \\
+~ & 0.965 & 1.000 & 0.966 & left & a person takes a step forward with their left foot, kicks something with their right foot, and pulls their right and left foot back. \\
+~ & 0.996 & 1.000 & 0.944 & left & this person stumbles left and right while moving forward. \\
+~ & 0.998 & 1.000 & 0.955 & right & a person walks in a curve to the right, turns and climbs several stairs. \\
+~ & 0.997 & 1.000 & 0.965 & left & a person leans forward with their right hand as if to pick something up, walks to the left, turns right, and leans to pick something up again, then moves right arm as if to wipe something. \\
+~ & 0.998 & 1.000 & 0.958 & right & holding hands together, a person moves them to the right slightly while holding them in front \\
+~ & 0.988 & 0.915 & 0.916 & clockwise & a person walking forward before turning clockwise to stare down a ledge. \\
+~ & 0.997 & 1.000 & 0.996 & left & a person takes two steps forward, then walks sideways three steps, then walks forward diagonally and to the left three steps. \\
+~ & 0.984 & 0.998 & 0.970 & left & a person reaches down with his right hand and twists his wrists left and right. \\
+~ & 0.995 & 1.000 & 0.969 & right & a walking man bumps something with his right leg then turns and walks in another direction. \\
+~ & 0.987 & 1.000 & 0.908 & left & a person brings their left foot up to both their hands in front of them, then crouches down while touching that foot, then bends their left knee and touches their foot with their left hand. \\
+~ & 0.999 & 1.000 & 0.998 & left & a person stands up straight, turns over their right shoukder trying to dodge something, stumbles bacj to center and then turns over left shoukder trying to dodge something \\
+~ & 0.991 & 0.487 & 0.968 & walking & a man brings his arms down, turns to his left and walks, then turns around and walks again, turns and continues walking, then turns one final time as he stops in a standing position. \\
+~ & 0.996 & 0.998 & 0.969 & left & a person stands with elbows bent and leans to the right at the waist oh, then to the left. then the person swings from the right to the left with arms outstretched. \\
+~ & 0.995 & 0.999 & 0.922 & right & a person picks up  a heavy object and moves it right. \\
+~ & 0.998 & 1.000 & 0.954 & left & a standing man loses a little bit of balance and his upper body leans and shakes toward his left. \\
+~ & 0.993 & 1.000 & 0.956 & left & a man evenly walks calmly forward while swinging left and right arms. \\
+~ & 0.997 & 0.996 & 0.966 & quickly & while standing in a half-squat with hands on knees, person turns head side to side and then quickly turns body and head counterclockwise. \\
+~ & 0.993 & 1.000 & 0.958 & left & the person bent down and dodge something towards the left. \\
+~ & 0.997 & 1.000 & 0.978 & right & a man has picked up an object while bending down and kneeling on his right side \\
+~ & 0.998 & 0.999 & 0.979 & left & a person walks forward, takes large step with right leg then slowly walks back to the left. \\
+~ & 0.997 & 1.000 & 0.945 & right & the figure steps forward then turns slightly right and proceeds to walk in that direction. \\
+~ & 0.994 & 1.000 & 0.982 & right & a person shakes arms to lossen up then walks backwads, then moves forward with the right arm in a swiming motion \\
+~ & 0.997 & 1.000 & 0.956 & left & he lunges his left arm \\
+~ & 0.995 & 0.999 & 0.973 & right & a person is crwoched down with their knees bent, puts their right arm up and down three times. \\
+~ & 0.999 & 0.997 & 0.914 & left & a person who is standing with his hands by his sides, bends to his left, reaches down and picks something up with both hands, then moves the item to his right and places it down. \\
+~ & 0.997 & 0.942 & 0.991 & clockwise & a person standing up flings their right arm into the air then drops it back to their waist, then flings their left arm into the air then drops it back to their waist, then rotates clockwise slightly using their hips, then kicks using their right leg. \\
+~ & 0.990 & 1.000 & 0.950 & right & a man walks foward ,makes a u turn to the right side ,walks and then stops. \\
+~ & 0.998 & 0.999 & 0.956 & right & a person is holding something in front of them and swings to the right. \\
+~ & 0.994 & 1.000 & 0.930 & right & a person jumps and spins to the right while kicking \\
+~ & 0.991 & 1.000 & 0.974 & left & a person side steps to the right and then to the left \\
+~ & 0.999 & 1.000 & 0.975 & right & person stands with arms outstretched then walks diagonally two steps to their right and sits down on a chair \\
+~ & 0.999 & 1.000 & 0.968 & right & a man walks forward, turns right and walks, stops, turns around and runs, stops again to turn around and runs again. \\
+~ & 0.978 & 1.000 & 0.926 & right & a man walks forward, picks up an object with his right hand and walks back to his position. then shakes his right hand \\
+~ & 0.997 & 1.000 & 0.938 & left & a person jumps in the air, then abruptly stumbles to his left as if he had been pushed, and finally he regains his balance. \\
+

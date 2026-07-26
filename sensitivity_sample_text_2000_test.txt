@@ -1,0 +1,368 @@
+Similarity 0.0~0.1:
+
+Similarity 0.1~0.2:
+
+Similarity 0.2~0.3:
+~ & 0.962 & 0.944 & 0.298 & forward & a person is walking forward. \\
+~ & 0.971 & 0.480 & 0.295 & forward & a person walks forward, then turns to the right, then continues to walk forward. \\
+~ & 0.951 & 0.931 & 0.243 & backward & a person walks backwards and stops. \\
+~ & 0.961 & 0.956 & 0.289 & forward & person is walking forward. \\
+~ & 0.948 & 0.938 & 0.281 & forward & a person walks forward and stops \\
+~ & 0.968 & 0.948 & 0.299 & backward & walking backwards and stopping. \\
+~ & 0.964 & 0.939 & 0.269 & backward & a person is walking backwards. \\
+~ & 0.962 & 0.944 & 0.298 & forward & a person is walking forward. \\
+~ & 0.960 & 0.952 & 0.292 & forward & a person is walking forward \\
+~ & 0.942 & 0.923 & 0.286 & forward & a person walks forward then stops. \\
+
+Similarity 0.3~0.4:
+~ & 0.950 & 0.934 & 0.301 & forward & a person walks forward and stops. \\
+~ & 0.968 & 0.665 & 0.385 & backward & a person walks backwards, turns around and walks backwards the other way. \\
+~ & 0.980 & 0.942 & 0.385 & backward & walking backwards and then stopping \\
+~ & 0.982 & 0.855 & 0.351 & backward & the person took a step and jump backwards. \\
+~ & 0.985 & 0.919 & 0.347 & backward & a man takes several steps backwards. \\
+~ & 0.981 & 0.947 & 0.399 & forward & a person is slowly walking forwards \\
+~ & 0.978 & 0.931 & 0.383 & backward & walking backwards and then stopping. \\
+~ & 0.968 & 0.924 & 0.363 & backward & trips backwards slightly while leading with right foot. \\
+~ & 0.983 & 0.827 & 0.365 & forward & walking forward and then to the side. \\
+~ & 0.950 & 0.781 & 0.387 & forward & a person walks forward then turns to the left. \\
+~ & 0.960 & 0.955 & 0.377 & forward & a person slowly walked forward \\
+~ & 0.946 & 0.809 & 0.363 & runs & a person runs, hesitates, then runs again. \\
+~ & 0.971 & 0.941 & 0.309 & forward & a man is walking forward \\
+~ & 0.970 & 0.959 & 0.374 & backward & a person slowly walked backwards \\
+~ & 0.960 & 0.955 & 0.377 & forward & a person slowly walked forward \\
+~ & 0.968 & 0.916 & 0.361 & backward & a person takes three steps backward. \\
+~ & 0.960 & 0.955 & 0.377 & forward & a person slowly walked forward \\
+~ & 0.955 & 0.938 & 0.374 & running & man running and stopping after \\
+~ & 0.968 & 0.911 & 0.379 & backward & the person walks backwards in a straight line \\
+~ & 0.960 & 0.955 & 0.377 & forward & a person slowly walked forward \\
+~ & 0.960 & 0.955 & 0.377 & forward & a person slowly walked forward \\
+~ & 0.962 & 0.844 & 0.335 & forward & a person walks forward from one end to the other. \\
+~ & 0.958 & 0.918 & 0.358 & backward & a man walks backwards and then stops. \\
+~ & 0.982 & 0.618 & 0.394 & forward & a man walks forward and then turns to the right and continues to walk. \\
+~ & 0.962 & 0.942 & 0.355 & backward & the person walks backwards carefully \\
+~ & 0.970 & 0.773 & 0.363 & forward & a person walks forwards and turns around on their left foot. \\
+~ & 0.971 & 0.731 & 0.325 & backward & a person walks backwards, then turns around then walks backwards again. \\
+~ & 0.975 & 0.862 & 0.356 & slowly & a person walks very slowly forward. \\
+~ & 0.987 & 0.919 & 0.361 & backward & the man takes 4 steps backwards. \\
+~ & 0.960 & 0.880 & 0.333 & backward & a person walks backward for 3 steps. \\
+~ & 0.960 & 0.955 & 0.377 & forward & a person slowly walked forward \\
+~ & 0.938 & 0.957 & 0.379 & walks & a person walks forward then walks up something. \\
+
+Similarity 0.4~0.5:
+~ & 0.982 & 0.933 & 0.448 & forward & the man moves forward and puts his arms down \\
+~ & 0.968 & 0.902 & 0.436 & forward & a man walks forward before stopping. \\
+~ & 0.970 & 0.933 & 0.466 & forward & person walks forwards straight while stumbling \\
+~ & 0.943 & 0.883 & 0.484 & walks & a person walks forward very slowly. \\
+~ & 0.943 & 0.843 & 0.447 & walking & the person is holding their head while walking. \\
+~ & 0.967 & 0.917 & 0.426 & backward & the person was pushed backwards. \\
+~ & 0.976 & 0.938 & 0.491 & slowly & a person is slowly walking forwards \\
+~ & 0.938 & 0.786 & 0.499 & forward & a person walks forward with his arms at his side slowly. \\
+~ & 0.964 & 0.887 & 0.473 & walking & a person is walking foward. \\
+~ & 0.942 & 0.796 & 0.405 & forward & a person walks forward while keeping both arms to their side. \\
+~ & 0.970 & 0.571 & 0.497 & forward & a person runs forwards, stops momentarily, and then begins to run forward again. \\
+~ & 0.969 & 0.938 & 0.478 & slowly & a person walks slowly forward \\
+~ & 0.957 & 0.917 & 0.449 & runs & the man runs back wards \\
+~ & 0.961 & 0.780 & 0.491 & walking & walking forward and then to the side. \\
+~ & 0.954 & 0.719 & 0.496 & walks & person walks forward, turns left, and walks back \\
+~ & 0.981 & 0.883 & 0.446 & slowly & a person is walking slowly forward. \\
+~ & 0.990 & 0.909 & 0.455 & forward & a person taking slow steps forward. \\
+~ & 0.964 & 0.802 & 0.499 & forward & a person walks forward while making small adjustments left and right \\
+~ & 0.983 & 0.890 & 0.464 & forward & a person slowly walked forward in right direction \\
+~ & 0.946 & 0.706 & 0.411 & forward & a person walks forward, then to the right and stops. \\
+~ & 0.975 & 0.688 & 0.414 & forward & the man walked forward, forming a forty-five degree angle. \\
+~ & 0.966 & 0.918 & 0.413 & forward & a person continuously walks forward. \\
+~ & 0.964 & 0.842 & 0.421 & backward & a person slowly walks backward in a straight line. \\
+~ & 0.985 & 0.938 & 0.416 & forward & walking forward and then stopping. \\
+~ & 0.956 & 0.906 & 0.462 & backward & a person is waling backwards. \\
+~ & 0.977 & 0.893 & 0.467 & forward & person walk forward them crouched slightly. \\
+~ & 0.962 & 0.932 & 0.498 & forward & a person slowly paces forward. \\
+~ & 0.963 & 0.944 & 0.458 & forward & someone walking forward then stop \\
+~ & 0.985 & 0.847 & 0.493 & slowly & person walks slowly forward with arms at sides. \\
+~ & 0.974 & 0.911 & 0.498 & forward & the person was walking forward slowly. \\
+~ & 0.962 & 0.924 & 0.441 & backward & a person is standing and jumps backward. \\
+~ & 0.953 & 0.887 & 0.444 & forward & a person runs forward and then stops \\
+~ & 0.956 & 0.878 & 0.422 & forward & a person walks forward in a straight line. \\
+~ & 0.971 & 0.887 & 0.400 & forward & a person takes a few steps forward then stops \\
+~ & 0.978 & 0.867 & 0.451 & walking & it is someone walking across the room. \\
+~ & 0.956 & 0.962 & 0.489 & backward & a person jumps backward. \\
+~ & 0.980 & 0.830 & 0.485 & backward & a man walks backwards without looking behind himself. \\
+~ & 0.967 & 0.945 & 0.432 & forward & the man moves forward slowly \\
+~ & 0.954 & 0.934 & 0.500 & running & a person is running forward. \\
+~ & 0.973 & 0.906 & 0.482 & backward & a person takes one large step backwards. \\
+~ & 0.975 & 0.879 & 0.453 & forward & a person slowly walked forward after in left direction \\
+~ & 0.979 & 0.932 & 0.462 & backward & a man steps backwards slowly. \\
+~ & 0.985 & 0.790 & 0.485 & walks & a stick figure walks diagonally, then stands still. \\
+~ & 0.969 & 0.778 & 0.450 & forward & person is walking forward like a robot \\
+~ & 0.987 & 0.716 & 0.447 & forward & a man walks forward 2 feet and then turns to walk back. \\
+~ & 0.986 & 0.853 & 0.470 & forward & walking forward with legs wide apart. \\
+~ & 0.981 & 0.949 & 0.439 & forward & person walks forward and scratches leg \\
+~ & 0.965 & 0.925 & 0.420 & forward & a person quickly walks forward. \\
+~ & 0.982 & 0.852 & 0.420 & slowly & a person walks forward very slowly. \\
+~ & 0.967 & 0.938 & 0.469 & backward & a person slowly walks backwards. \\
+~ & 0.976 & 0.879 & 0.473 & forward & a person walks forward and then stumble to their left. \\
+
+Similarity 0.5~0.6:
+~ & 0.993 & 0.879 & 0.529 & quickly & the person takes several steps quickly. \\
+~ & 0.968 & 0.983 & 0.545 & forward & a person slowly jumped forward \\
+~ & 0.981 & 0.627 & 0.535 & forward & a person holding something walks forward, puts it down on the ground, then continue to walk forward. \\
+~ & 0.956 & 0.932 & 0.517 & forward & a person walks forward slowly. \\
+~ & 0.970 & 0.344 & 0.587 & walking & A person begins by walking slowly forward with their arms relaxed by their sides. They then turn over their right shoulder, continuing to walk forward in this new direction. After another right shoulder turn, they wave their hands at waist level to someone or something, while maintaining their walking pace. \\
+~ & 0.962 & 0.722 & 0.552 & walks & this person walks forward and picks something up then walks back. \\
+~ & 0.933 & 0.924 & 0.519 & walks & a person walks slowly forward \\
+~ & 0.939 & 0.809 & 0.570 & walking & walking to the side then sitting down and walking back. \\
+~ & 0.988 & 0.501 & 0.581 & forward & The individual walks forward without a specific direction, slightly turning left as they move. Their arms swing naturally by their sides, and they occasionally glance around, observing their surroundings. \\
+~ & 0.979 & 0.923 & 0.562 & slowly & a person slowly walks forward. \\
+~ & 0.974 & 0.528 & 0.537 & walking & a person is walking forward and then swiftly turns right and starts walking sideways. \\
+~ & 0.994 & 0.098 & 0.558 & forward & The person walks forward with a calm and steady pace, their arms gently swaying by their sides. As they proceed, they smoothly make a right turn, adjusting their direction while maintaining their stride. \\
+~ & 0.979 & 0.785 & 0.514 & forward & the person walks forward with their right hand raised, then sways with both hands raised. \\
+~ & 0.986 & 0.645 & 0.575 & forward & a person, slowly walked forward, and after made circle with right hand \\
+~ & 0.935 & 0.911 & 0.588 & walks & a person walks forward slowly. \\
+~ & 0.976 & 0.985 & 0.530 & slowly & a person walking slowly forward with confidence \\
+~ & 0.953 & 0.747 & 0.540 & walks & a person walks forward, turns around then walks back. \\
+~ & 0.979 & 0.753 & 0.529 & forward & the person is walking forward and then back the other direction. \\
+~ & 0.977 & 0.924 & 0.571 & walks & man walks raising hands up \\
+~ & 0.974 & 0.894 & 0.569 & forward & someone walks forward at a casual pace. \\
+~ & 0.989 & 0.622 & 0.586 & forward & a person is walking forward and then swiftly turns right and starts walking sideways. \\
+~ & 0.986 & 0.751 & 0.594 & forward & a man walks forwards carefully with wide and uneven steps. \\
+~ & 0.972 & 0.892 & 0.568 & walks & a person walks in a sneaky way forwards. \\
+~ & 0.975 & 0.850 & 0.563 & forward & person slides forward diagonally with right leg. \\
+~ & 0.976 & 0.908 & 0.524 & forward & a person walking slowly forward with confidence \\
+~ & 0.971 & 0.938 & 0.564 & forward & a person walks forward and then up stairs \\
+~ & 0.954 & 0.888 & 0.540 & running & a person is running to the left \\
+~ & 0.943 & 0.925 & 0.511 & walking & a person walking in a straight line \\
+~ & 0.966 & 0.944 & 0.541 & running & running forward then stopping. \\
+~ & 0.933 & 0.700 & 0.519 & walks & this person walks forward, turns then walks back. \\
+~ & 0.952 & 0.912 & 0.598 & backward & a person is pushed backwards from the front. \\
+~ & 0.981 & 0.905 & 0.570 & forward & man walks forward moving hands and neck. \\
+~ & 0.957 & 0.898 & 0.584 & forward & a person walks forward very slowly. \\
+~ & 0.965 & 0.819 & 0.551 & forward & a person walks forward to the right and casually looks around. \\
+~ & 0.963 & 0.942 & 0.555 & running & a person is running in place. \\
+~ & 0.960 & 0.909 & 0.549 & forward & person walks forward and to the right \\
+~ & 0.964 & 0.862 & 0.590 & forward & a person walks forward and then pulls something behind them. \\
+~ & 0.990 & 0.110 & 0.522 & forward & The individual walks forward, initiating the movement with their right leg. Upon stopping, she turns left and proceeds to walk forward with arms at her sides. She halts, adopting a neutral stance with feet shoulder-width apart, looking straight ahead, and arms relaxed and slightly away from the body. \\
+~ & 0.970 & 0.875 & 0.529 & walks & a person walks to a window and looks around. \\
+~ & 0.976 & 0.834 & 0.524 & forward & a man quickly runs forward. \\
+~ & 0.972 & 0.903 & 0.501 & forward & person walks forward, stumbles back, and continues forward \\
+~ & 0.936 & 0.923 & 0.550 & walks & a person slowly walks forward. \\
+~ & 0.984 & 0.837 & 0.576 & backward & a figure steps backward cockily, swinging their arms \\
+~ & 0.979 & 0.220 & 0.516 & forward & person walks forwards at a fast pace, turns around 180 degrees clockwise using only their right leg as support, and then walks forwards again. \\
+~ & 0.967 & 0.545 & 0.527 & forward & a person walks forward with a large object in their hands, puts the object down and continues to walk forward. \\
+~ & 0.945 & 0.959 & 0.509 & forward & a person jumps forward once. \\
+~ & 0.945 & 0.940 & 0.575 & runs & a man runs on a flat surface \\
+~ & 0.971 & 0.920 & 0.521 & forward & a person walks forward and then walks up some steps. \\
+~ & 0.936 & 0.923 & 0.550 & walks & a person slowly walks forward. \\
+~ & 0.985 & 0.834 & 0.578 & forward & a person walks forwards and swings their right arm backwards twice. \\
+~ & 0.973 & 0.857 & 0.567 & forward & person walks forward, turns and walks back \\
+
+Similarity 0.6~0.7:
+~ & 0.983 & 0.788 & 0.646 & walks & person walks to pick something up then walks back to wipe something with it. \\
+~ & 0.988 & 0.806 & 0.611 & walks & a person walks forward  to bow then place hands on shoulders of other person and bows again. \\
+~ & 0.990 & 0.351 & 0.620 & walks & The person walks forward, initially lifting her head in a contemplative manner. As she continues, she lowers her head and tilts it slightly to the right. She then turns her head fully to the right while maintaining her forward walking motion. \\
+~ & 0.994 & 0.350 & 0.697 & forward & a person begins walking forward first with their left foot, taking wide awkward steps as if they are stepping around or over something; begins walking towards the right and then slowly continues to walk to the left, then continues to walk towards the right coming to a stop off to the right side. \\
+~ & 0.984 & 0.749 & 0.613 & forward & this person walks forward then turns right and walks back. \\
+~ & 0.967 & 0.838 & 0.663 & walks & a man walks in a clockwise circle. \\
+~ & 0.984 & 0.642 & 0.661 & runs & person moves forward sluggishly then runs in other direction \\
+~ & 0.971 & 0.785 & 0.626 & forward & a person walks forward, spins around and walks back. \\
+~ & 0.950 & 0.875 & 0.697 & walks & a person walks in a curve towards the right \\
+~ & 0.980 & 0.928 & 0.677 & forward & person walks with both arms straight forward \\
+~ & 0.980 & 0.288 & 0.691 & forward & The person walks forward, glancing slightly downward. They halt in a neutral stance and then pivot to the right, walking forward while gradually turning their body to the right. After completing the turn, they stop, standing in a neutral position with their arms relaxed at their sides. \\
+~ & 0.976 & 0.935 & 0.692 & walking & cheerfully walking forward with each step. \\
+~ & 0.986 & 0.712 & 0.633 & walks & The individual walks backward in a relaxed manner, pausing to lift her left hand and inspect it. She lightly touches her left hand with her right, then returns to a standing position with feet shoulder-width apart, gently waving her arms at her sides. \\
+~ & 0.952 & 0.851 & 0.652 & walks & a person walks around in a circle. \\
+~ & 0.969 & 0.768 & 0.669 & walks & a person walks forward casually with a swagger to their hips. \\
+~ & 0.961 & 0.921 & 0.691 & walks & a person walks backward in a small zig zag \\
+~ & 0.955 & 0.856 & 0.662 & walks & a person walks to the right and sits down. \\
+~ & 0.981 & 0.484 & 0.676 & walks & a person casually walks forwards, turns around, walks back, turns to the left, and backs up a few steps while raising both forearms level with the floor. \\
+~ & 0.971 & 0.805 & 0.693 & walks & walks and stumbles around with the arms out in front of the body. \\
+~ & 0.955 & 0.929 & 0.630 & forward & a person jumping up and forward \\
+~ & 0.986 & 0.956 & 0.683 & forward & walking forward then backwards. \\
+~ & 0.977 & 0.458 & 0.682 & walks & a person turns to their left, walks forward then turns back around and walks halfway back to their starting point before stopping. \\
+~ & 0.965 & 0.631 & 0.609 & walks & a man walks forward and then turns around and walks in the opposite direction. \\
+~ & 0.995 & 0.741 & 0.636 & walks & The person walks calmly forward, then turns over her right shoulder. She talks while moving her hands at the abdominal level, tilting her body slightly left and right. She then turns left, lowers her arms, and continues walking. She sits on a bench, placing both hands on her knees, and turns her head slightly to the right. \\
+~ & 0.983 & 0.924 & 0.634 & walking & a person walking and jumping forward. \\
+~ & 0.986 & 0.388 & 0.650 & walks & The person walks forward with an energetic stride. She comes to a stop, tilts her torso to the right, and lowers herself to sit on the floor, bending her knees in front of her. She bends her arms at the elbows, placing her left hand on her left knee and her right hand on her right knee. \\
+~ & 0.976 & 0.810 & 0.606 & forward & this person walks forward, turns then walks back. \\
+~ & 0.974 & 0.979 & 0.681 & forward & the person steps forward and uses the left leg to kick something forward. \\
+~ & 0.946 & 0.904 & 0.625 & walks & a person walks curved to their left. \\
+~ & 0.977 & 0.148 & 0.605 & forward & The person begins walking forward with an unsteady gait, right leg leading and arms out to the sides. They place one foot in front of the other, slightly leaning left, stumbling a bit. Their right arm lowers during this motion. Continuing forward, they lower both arms, pause, then turn their head left, tilt it upward, and finally rotate it to the right. \\
+~ & 0.959 & 0.916 & 0.678 & walks & a person walks forward at medium speed. \\
+~ & 0.977 & 0.842 & 0.683 & walks & figure walks forward then zags to left before walking right. \\
+~ & 0.989 & 0.527 & 0.644 & forward & The person walks forward with an energetic stride. She comes to a stop, tilts her torso to the right, and lowers herself to sit on the floor, bending her knees in front of her. She bends her arms at the elbows, placing her left hand on her left knee and her right hand on her right knee. \\
+~ & 0.935 & 0.895 & 0.624 & walks & man walks forward moving hands and neck. \\
+~ & 0.991 & 0.801 & 0.647 & forward & figure walks forward then zags to left before walking right. \\
+~ & 0.987 & 0.981 & 0.654 & slowly & a person slowly walked forward after in left direction \\
+~ & 0.953 & 0.882 & 0.632 & walks & a person walks forward to the right and casually looks around. \\
+~ & 0.965 & 0.961 & 0.624 & forward & the person jumps forward and turns to his left. \\
+~ & 0.961 & 0.898 & 0.630 & walks & a man carefully walks backwards to the opposite end of the room. \\
+~ & 0.961 & 0.915 & 0.631 & walking & a person is walking backwards. \\
+~ & 0.963 & 0.792 & 0.642 & walking & walking forward and then bending down. \\
+~ & 0.958 & 0.966 & 0.610 & forward & a person steps forward slightly then waves with its right hand. \\
+~ & 0.965 & 0.814 & 0.646 & walking & the person is walking forward turning left. \\
+~ & 0.987 & 0.516 & 0.636 & walks & a person walks forward, and then takes a sharp turn left, back to where they started. \\
+~ & 0.948 & 0.791 & 0.673 & walking & a man is walking in a large counter-clockwise circle. \\
+~ & 0.955 & 0.504 & 0.657 & walks & man walks forward while upper body is leaning slightly to the left and steps are unbalanced and slow. \\
+~ & 0.964 & 0.940 & 0.629 & walks & a person walks backwards at a moderate pace. \\
+~ & 0.993 & 0.107 & 0.644 & forward & The person begins by walking forward at a calm pace. After taking several steps, she halts and gently tilts her torso to the right, then to the left, executing the movement with a fluid, controlled motion. \\
+~ & 0.976 & 0.809 & 0.647 & walks & a person walks in a curved angle then stops. \\
+~ & 0.984 & 0.968 & 0.683 & slowly & a person slowly walks down some stairs. \\
+~ & 0.992 & 0.518 & 0.675 & backward & a person slowly walks backwards in a counter clockwise motion while dragging their left foot. \\
+
+Similarity 0.7~0.8:
+~ & 0.968 & 0.875 & 0.710 & walks & a man walks forward and then back in a boxing stance. \\
+~ & 0.987 & 0.805 & 0.743 & forward & a person takes a step forward, moves to theor right, them continues foward with their right hand on a rail. \\
+~ & 0.987 & 0.990 & 0.759 & forward & a person stretches their arms, then swings their left arm forward making a few circles \\
+~ & 0.999 & 0.997 & 0.766 & left & Standing upright, the person bends their left arm behind their head and stretches their right arm out to the left side. They then lower both arms, relax their posture, and gently sway from one foot to the other, allowing their arms to swing naturally downwards. \\
+~ & 0.984 & 0.607 & 0.710 & walking & a person starts walking with their right foot first and takes eleven steps forward. \\
+~ & 0.986 & 1.000 & 0.768 & right & a person reaches forward with their right arm \\
+~ & 0.982 & 0.916 & 0.780 & forward & a person stumbles forward and back almost falling over. \\
+~ & 0.974 & 0.838 & 0.774 & walking & the person is walking to the left holding onto the handrail. \\
+~ & 0.961 & 0.715 & 0.706 & walks & a person walks in a s shape route to the left. \\
+~ & 0.986 & 0.942 & 0.752 & running & a person is running then takes big leap. \\
+~ & 0.994 & 1.000 & 0.761 & left & the person is waving with their left arm. \\
+~ & 0.991 & 0.706 & 0.757 & walks & a man walks forward, then squats to pick something up with both hands, stands back up, and resumes walking. \\
+~ & 0.994 & 0.544 & 0.764 & forward & The person stands facing to the right. They turn to the right and begin walking forward, briefly raising their right hand to their mouth before lowering it. They continue walking, then turn to the right again, coming to a stop in a neutral standing position. \\
+~ & 0.989 & 0.626 & 0.792 & forward & The individual takes four steps forward, swinging their arms at their sides. They turn left, lowering into a squat while leaning forward. They propel themselves into a broad jump forward with a strong arm swing. After landing, they stretch out and turn around over their right shoulder. \\
+~ & 0.980 & 1.000 & 0.786 & left & a person lifts up their left arm to the side. \\
+~ & 0.979 & 1.000 & 0.795 & right & a person lifts a weight with their right hand \\
+~ & 0.990 & 0.028 & 0.775 & forward & A person begins by walking slowly forward with their arms relaxed by their sides. They then turn over their right shoulder, continuing to walk forward in this new direction. After another right shoulder turn, they wave their hands at waist level to someone or something, while maintaining their walking pace. \\
+~ & 0.997 & 1.000 & 0.778 & left & The individual raises their left hand to wave in greeting. Afterward, they lower their hand and proceed to walk forward, tapping their hands gently on their thighs. They then come to a halt and assume a neutral standing position, with arms at rest. \\
+~ & 0.992 & 0.783 & 0.700 & forward & a person walks forward, bends down, picks something up and moves it, gets back up and walks back. \\
+~ & 0.989 & 0.862 & 0.726 & right & The person stands upright, hands positioned behind the head with elbows pressed close to the body. They then lower their hands down while gently swaying their body back and forth in a subtle motion. \\
+~ & 0.994 & 0.453 & 0.714 & walks & The individual walks forward, gazing upward while rubbing their hands together at stomach level. They then take a few steps back, lowering their hands toward the ground. Afterward, they raise their hands back to stomach level, bending their elbows, and twist their body to the left. \\
+~ & 0.968 & 0.999 & 0.741 & forward & this person bends forward as if to bow. \\
+~ & 0.986 & 0.885 & 0.707 & forward & person is walking wobbling forward. \\
+~ & 0.984 & 0.776 & 0.725 & forward & a person walks forward a few steps, and then he walks up a staircase. \\
+~ & 0.973 & 0.913 & 0.777 & right & The individual stands upright, with their head slightly angled to the right. They raise their right hand, bending the elbow, to scratch their right ear while gently shaking their head. Afterward, they lower their right hand and take two small steps backward, returning to a neutral standing position. \\
+~ & 0.990 & 0.815 & 0.728 & forward & a person takes a few steps forwards then turns around and tries to jog. \\
+~ & 0.992 & 0.169 & 0.789 & forward & a person who is standing with his arms by his sides takes one step forward, starts walking towards his right, then takes two steps to his left and stops. \\
+~ & 0.988 & 0.984 & 0.771 & right & The person stands upright, gently swaying their torso from side to side. Simultaneously, they move their fingers in a fluid, continuous motion, creating a rhythmical pattern with their hands. \\
+~ & 0.980 & 0.999 & 0.747 & left & a person while standing still raises his left hand up and down and turns to his left. \\
+~ & 0.968 & 0.990 & 0.708 & right & The person raises their right hand to touch their neck while keeping their head in an upright position. They then lower their head and bring their right hand down, returning to a neutral, relaxed stance. \\
+~ & 0.987 & 0.798 & 0.710 & forward & The woman stands at ease and begins to walk forward calmly, her arms swinging slightly at waist level. She pauses, extends her right arm, and leans her upper body forward to pick up an object from a table. She rotates her body over her right shoulder and continues to walk forward. Then, she turns over her left shoulder and comes to a stop. \\
+~ & 0.990 & 0.987 & 0.767 & quickly & a person quickly sidesteps to the left and regains balance. \\
+~ & 0.994 & 0.952 & 0.710 & backward & The person steps backward with the right foot, rotating their body to the right. They move their bent arms behind their head, then tilt their torso left and right. Initially, their hands lower behind their back, then they extend their arms upward. \\
+~ & 0.985 & 0.986 & 0.780 & forward & a man steps forward vigorously and then kicks something low with his right leg. \\
+~ & 0.984 & 0.691 & 0.720 & forward & a person standing with his hands by his sides takes a huge side step forward. \\
+~ & 0.965 & 0.756 & 0.711 & walks & a person walks several steps forward in a straight line. \\
+~ & 0.996 & 0.563 & 0.793 & walking & The person turns to the right and starts walking with a limp, bending at the knees. They swing their left arm with force. After a few steps, the limp subsides into a normal walk. Upon reaching a stopping point, they turn left and take a couple of steps back, finally standing in a neutral, upright position. \\
+~ & 0.986 & 0.974 & 0.783 & runs & the dog runs and jumps to its owner \\
+~ & 0.987 & 0.165 & 0.702 & forward & The person walks forward with a calm demeanor, arms gently swinging at their sides. They make a left turn and continue walking in the new direction. Finally, they make another left turn and come to a stop, facing forward. \\
+~ & 0.983 & 1.000 & 0.751 & left & a person slowly waves with their left hand twice \\
+~ & 0.991 & 0.648 & 0.729 & backward & a person who is standing slowly moves backwards as he takes twelve careful steps and stops. \\
+~ & 0.990 & 0.992 & 0.761 & quickly & this person is running quickly across the space. \\
+~ & 0.960 & 0.991 & 0.730 & forward & a person points forward with their right hand. \\
+~ & 0.988 & 0.237 & 0.800 & running & The individual turns to the left and starts running forward. After a short distance, they stop abruptly, turn their head over the left shoulder, then bow their head slightly and walk forward with arms bent at stomach level. \\
+~ & 0.991 & 0.953 & 0.758 & right & The woman stands upright with her hands positioned in front of her at waist height. She smoothly lifts both hands to chest level, pauses, then gently lowers them back down. Simultaneously, she tilts her head slightly downward. \\
+~ & 0.993 & 0.373 & 0.718 & forward & The individual moves forward with a limp, dragging their right foot slightly as they walk. They initiate each step with the left leg and gradually turn their body by looking over the right shoulder. \\
+~ & 0.979 & 0.959 & 0.774 & forward & a man walks forward, does two kicks to the side and then one kick to the front. \\
+~ & 0.977 & 0.986 & 0.794 & forward & a person who is standing with his hands by his sides steps forward with his right foot, kicks out with his left foot and then steps back to his original position. \\
+~ & 0.987 & 0.242 & 0.712 & forward & A person walks diagonally forward to the left with a relaxed posture, arms resting at their sides. They pause, turn around by pivoting over their right shoulder, and resume walking forward in the same relaxed manner. \\
+~ & 0.974 & 0.836 & 0.713 & walks & a person walks forward and climbs up two steps with both hands by their sides. \\
+~ & 0.986 & 0.822 & 0.707 & slowly & the person is walking slowly like a monster. \\
+
+Similarity 0.8~0.9:
+~ & 0.996 & 1.000 & 0.850 & right & a person prepares to throw something with their right arm and completes the throw. \\
+~ & 0.971 & 0.991 & 0.838 & right & The individual stands upright, gently rocking their torso back and forth. Their arms, which hang down by their sides, swing slightly in response to the torso's motion. \\
+~ & 0.996 & 1.000 & 0.893 & right & this person walks forward then stops and waves his right hand in circles. \\
+~ & 0.995 & 0.981 & 0.898 & forward & The person stands in a relaxed position. She steps forward with her right foot, leans her body to the right, and places her right hand on the floor for support as she lowers herself to sit. She crosses her legs and extends her arms forward, maintaining a balanced sitting posture. \\
+~ & 0.989 & 0.642 & 0.844 & walks & The individual humorously and awkwardly walks backward, with exaggerated arm waving. Upon stopping, they position their feet closely together, arms resting at their sides. They maintain a forward gaze, with their head subtly turned to the left. \\
+~ & 0.981 & 1.000 & 0.865 & right & person picks something up with right hand to adjust something. \\
+~ & 0.994 & 0.868 & 0.881 & forward & The individual briskly steps from the right foot to the left, alternately extending each foot forward. She balances with bent arms at her sides and raises one leg forward. Standing upright, she steps onto her right foot and lifts her left leg straight up in front. Her arms wave at her sides, and she steps forward, turning her head to the left. \\
+~ & 0.984 & 1.000 & 0.893 & right & the person takes a step and waves his right hand back and forth \\
+~ & 0.988 & 0.790 & 0.863 & walking & The person walks forward in a crouched position, looking downward at the floor. While walking, she turns her head side to side, scanning the surroundings. She then slightly turns her body to the right while continuing her movement. \\
+~ & 0.986 & 0.982 & 0.876 & right & The person stands upright, gently swaying their upper body from side to side with a rhythmic motion while slightly bending their legs at the knees. \\
+~ & 0.965 & 1.000 & 0.872 & right & a person makes a step to the right. \\
+~ & 0.991 & 0.198 & 0.878 & walking & The individual stands at rest, then takes a wide step to the left. While looking down to the right, they begin walking forward in a clockwise circle, maintaining their gaze downward to the right throughout the motion. \\
+~ & 0.981 & 0.990 & 0.848 & slowly & a person slowly kicks with their right leg. \\
+~ & 0.976 & 0.927 & 0.803 & walks & person walks quickly forward for 2 strides then stops. \\
+~ & 0.997 & 1.000 & 0.832 & right & The woman stands in a relaxed position, her right arm extended to the side. She turns slightly right and bends her right arm at the elbow toward her neck. Taking small steps backward, she lowers her right arm. She pauses, turns her neck to the right, then returns to face forward, standing straight again. \\
+~ & 0.991 & 0.861 & 0.821 & right & The person stands upright with hands extended forward at shoulder height. They lower their hands with a downward swing while tilting their head down. Next, they swing their hands from the sides to their pelvis area multiple times, then relax their arms. Finally, they bring their legs together and give a slight shake of the head from side to side. \\
+~ & 0.995 & 1.000 & 0.882 & left & a person raises their arms above their head kicks with their left leg. \\
+~ & 0.994 & 0.591 & 0.830 & walks & a person takes a step forward, pivots on their left foot and turns 180 degrees and walks back to where they started, but facing the opposite direction \\
+~ & 0.962 & 0.997 & 0.809 & forward & a person bows forward to their waist somewhat slowly. \\
+~ & 0.992 & 1.000 & 0.857 & right & a person slowly walked forward in right direction \\
+~ & 0.993 & 1.000 & 0.856 & left & a person walks in a circle to their left. \\
+~ & 0.995 & 0.999 & 0.839 & right & the person is walking fast to the right. \\
+~ & 0.986 & 0.960 & 0.861 & clockwise & a person turns counter clockwise and walks backward, then turns clockwise and stops. \\
+~ & 0.997 & 0.997 & 0.884 & left & The individual stands, holding their left arm bent at neck level and right hand resting on the left elbow. They straighten and stretch the left arm outward before lowering both arms to their sides. Finally, they take a small step backward, returning to a relaxed standing position. \\
+~ & 0.997 & 0.693 & 0.801 & forward & The individual advances forward with their legs wide apart, lowering their head and swaying their arms outward at the sides. They then turn their head to the left, transition to walking backward, bringing their legs closer, while continuing to wave their arms. Finally, they raise their head and come to a stop, standing with legs shoulder-width apart. \\
+~ & 0.994 & 1.000 & 0.894 & left & the person hopped a big step to the left. \\
+~ & 0.985 & 0.919 & 0.820 & right & The individual stands upright in a neutral stance. She takes a step back, aligning her posture fully upright, and extends her arms laterally outward at shoulder height, creating a straight line with her arms. \\
+~ & 0.997 & 0.788 & 0.892 & forward & The person turns their body to the left and walks forward, allowing their arms to swing naturally with each step. After a short distance, they stop, turn around, and walk back in the opposite direction, continuing to swing their arms gently. \\
+~ & 0.995 & 0.906 & 0.869 & slowly & a person who has his hands by his sides slowly creeps forward while looking about. \\
+~ & 0.966 & 0.783 & 0.804 & walking & drunk walking animation turning around \\
+~ & 0.990 & 1.000 & 0.856 & right & a person picks something up with his right hand and bring it up to his face \\
+~ & 0.994 & 0.877 & 0.806 & forward & The person turns to their right and begins walking forward, initiating the movement with the left leg. They then stop and pivot over their left shoulder, taking several steps in place. Following this, they step backward and raise their left arm, bent at the elbow, bringing their hand near their head. \\
+~ & 0.991 & 0.993 & 0.837 & left & The person begins with their head turned left and left leg extended. They step forward with the right foot, turning left and swinging their arms, head turning slightly right. Next, they bring the left foot forward, turning their head left then right. Finally, they step back, lower their head, and shift their weight onto the right leg. \\
+~ & 0.998 & 1.000 & 0.896 & left & The woman stands in a neutral stance. She raises her left arm slightly outward, then shifts her left foot to take a few steps sideways. Once repositioned, she transitions into walking forward. \\
+~ & 0.983 & 0.905 & 0.859 & right & The woman stands upright, raising her arms slightly to observe her hands. She lowers her hands and adjusts her stance, turning her head slightly to the right while remaining in position. \\
+~ & 0.986 & 1.000 & 0.895 & left & the person walks forward with left foot first then stops. \\
+~ & 0.980 & 1.000 & 0.851 & right & a person acts as if they are washing something with their right hand. \\
+~ & 0.979 & 0.959 & 0.807 & walking & the man looks to shake someone's hand before giving a wave with his right hand and walking out. \\
+~ & 0.975 & 1.000 & 0.844 & right & a man walks and turns to the right. \\
+~ & 0.996 & 0.998 & 0.845 & slowly & a figure bends down to sit on the floor slowly and cross-legged \\
+~ & 0.975 & 0.985 & 0.873 & clockwise & a person walks in a clockwise circle. \\
+~ & 0.982 & 0.993 & 0.892 & forward & a person crawls on hands and knees forward, stands up with side showing. \\
+~ & 0.985 & 0.928 & 0.859 & right & The individual stands upright, slightly bending their knees in alternation while gently swinging their arms. They rotate their torso and head from side to side with controlled movements. After completing these motions, they pause and stand still, returning to their original position. \\
+~ & 0.988 & 0.978 & 0.855 & forward & man steps back with his right foot, then proceeds to shift his body to the right and step forward with a wave. \\
+~ & 0.997 & 0.900 & 0.832 & runs & The person stands with arms bent at waist level, turns to the right, leans forward, and runs swiftly, swinging their arms in a coordinated manner. They stop, pivot backward over the left shoulder, and run again. Finally, they take an extended step forward with the right leg, pause, and settle into a neutral stance. \\
+~ & 0.995 & 1.000 & 0.854 & right & the person is lifting a dumbbell with the right hand. \\
+~ & 0.989 & 0.640 & 0.847 & forward & this person zig zags forward then stops to the right. \\
+~ & 0.988 & 1.000 & 0.873 & right & A person turns to the right and begins walking diagonally, gently waving their arms down by their sides. They then pivot over their right shoulder, take two steps backward, and come to a stop. \\
+~ & 0.965 & 0.988 & 0.871 & forward & The person throws an object forward with her left hand, leaning right and lifting her left leg. She steps back, turns right, bends down, and picks up an item. She turns left, steps forward with her right leg, swings her left arm back, and throws forward with her left hand. Then, she steps back, turns right, bends down, and reaches for the floor. Rising, she turns left, walks straight, and bends her right arm at the elbow to scratch her neck, turning her head slightly left. \\
+~ & 0.996 & 0.891 & 0.805 & quickly & a man crouches down while quickly walking forward and then stands up straight. \\
+~ & 0.996 & 1.000 & 0.891 & right & the person took a large side step to the right. \\
+
+Similarity 0.9~1.0:
+~ & 0.994 & 0.999 & 0.954 & left & The person begins in a neutral standing position, steps forward with their left leg, and pauses. They then lower themselves onto their right knee, placing the left hand on the left knee and the right hand on the right thigh. Following this, they lean slightly forward, resting the left elbow on the left thigh for support. \\
+~ & 0.989 & 0.997 & 0.947 & left & The person walks forward with a calm demeanor, turning their head first to the left and then to the right while swinging their arms gently. They lower their head, look up, and glance to the left. Finally, they turn left, come to a stop, and grasp their right forearm with their left hand. \\
+~ & 0.999 & 1.000 & 0.997 & right & A person stands in a relaxed posture, gently moving her hands below at waist level while slightly tilting her head to the right. \\
+~ & 0.999 & 1.000 & 0.997 & left & The person is seated on the ground with her legs bent at the knees, hands resting on them. She leans on her left hand to stand up, executes a 180-degree turn to her right, and then begins walking straight. After a few steps, she halts and completes another 180-degree turn to the right. \\
+~ & 0.998 & 0.999 & 0.999 & left & a person walks forward several steps then loses their balance, hesitates and leans towards the right; takes several more steps with their body swaying towards the left, \\
+~ & 0.991 & 0.999 & 0.959 & left & a person uses right arm to hit down to the left and then the left arm crosses over the right side of the body. \\
+~ & 0.997 & 1.000 & 0.985 & left & a person walks forward one foot in front of the other until he loses his balance and tilts far to the left then stumbles to his left. \\
+~ & 0.988 & 0.928 & 0.984 & forward & The individual stands with hands clasped at belly level. She swings her left arm, rotates her torso to the left, and leans forward to throw a ball with her left hand, stepping forward with her right foot. She then lowers her arms, walks backward calmly, folding her hands again. She continues walking backward, turns her head left, and then to the right, before coming to a stop. \\
+~ & 0.990 & 0.950 & 0.959 & clockwise & the person kick his right foot up and both hands up in clockwise circle and stop. \\
+~ & 0.995 & 0.884 & 0.915 & slowly & a person slightly bent over with left hand pressing against the air walks forward slowly \\
+~ & 0.995 & 1.000 & 0.957 & right & a person dances on the spot while waving their right arm in the air, then poses with legs splayed and arms outstretched \\
+~ & 0.996 & 1.000 & 0.990 & left & The person sits on the floor with knees bent, right hand resting on the knee, and left hand holding the right hand. She places both hands on her neck with elbows down, then lowers her arms and places palms behind her. Using the left hand for support, she leans to the left side and stands up from the floor. \\
+~ & 0.998 & 0.998 & 0.991 & forward & Standing initially, the person tilts their head down and left. They lean left, bend knees, and turn right slightly before sitting while adjusting the left foot. Leaning forward, they turn their head right, resting bent arms on legs and clasp hands. They turn left slightly, moving arms to cross hands, then tilt their head up and right, placing the right hand on the right leg. Leaning back gently, they fluidly turn their head right and tilt it downward. \\
+~ & 0.986 & 0.999 & 0.972 & left & a person stands from the ground, takes left foot up, sets back down, does the same on the right side. \\
+~ & 0.995 & 0.981 & 0.924 & forward & The person begins by tilting their head downward, then takes a step forward and halts. They rotate their body to the right, lean forward, and extend their right leg backward in a kick while bending their arms at stomach height. Following this, they swiftly lower themselves to the ground, assuming a push-up position. \\
+~ & 0.998 & 0.836 & 0.925 & forward & The person stands with her head bowed and arms hanging by her sides. She shuffles forward, first with her left foot, then with her right, as she tilts her upper body and head down, reaching with her left hand towards the floor. She then straightens her posture, lowers her arms, and takes four slow steps backward, allowing her arms to sway gently as she moves. \\
+~ & 1.000 & 0.996 & 0.987 & left & The individual turns to their right and walks forward. Upon stopping, they rotate to the left, returning to a neutral stance with legs slightly apart. Their arms hang loosely, swinging gently at hip level as they remain relaxed in this position. \\
+~ & 0.999 & 1.000 & 0.998 & left & The woman sprints forward, leaning slightly as she holds a ball with both hands. She jumps, twisting to her left in mid-air, and throws the ball towards a hoop. She lands with knees bent, turns left, then resumes running. She throws the ball with both hands, head up, aiming for the hoop again. \\
+~ & 0.999 & 1.000 & 0.993 & forward & The person alternates shifting weight between their feet, then makes a sharp turn to the right. They walk straight ahead for a short distance, make a left turn, and approach a chair. They bend their knees and sit down, bringing their arms forward in a relaxed bend. \\
+~ & 0.998 & 0.999 & 0.971 & left & person holds right hand to mouth and swings left arm before bouncing with both arms facing out happily \\
+~ & 0.998 & 1.000 & 0.991 & right & a man kneels down and braces himself on a stool with his right hand. \\
+~ & 0.996 & 0.999 & 0.987 & left & The person stands still and leans right. They then walk forward, beginning with the left leg, swaying slightly with each step, and gently swinging their arms at their sides. As they finish, they stop, turn to the right, tilt their head toward the left shoulder, and shift their weight onto the left leg, with the right leg bent slightly. \\
+~ & 0.997 & 0.995 & 0.904 & forward & The individual starts by bending forward, arms extended downward. They then push off the ground with their feet, raising their arms upwards, and jump high on the spot. This jumping motion is repeated two more times before they stand upright, returning to an erect posture. \\
+~ & 0.999 & 1.000 & 0.994 & left & The person stands with arms relaxed, shifting weight from one foot to the other. She steps forward with her left foot and starts bending and lifting her legs alternately, touching her heels with the opposite feet. Then, she stands with legs wide, leans to the right, and reaches her right hand toward her right foot. \\
+~ & 0.999 & 1.000 & 0.998 & left & The person stands in a neutral stance. They swiftly raise their arms straight, slightly turning them, and quickly turn their head side to side, observing their elbows. Then they lower their arms back to the starting position. Following this, they look left and gradually turn their head to the right. \\
+~ & 1.000 & 1.000 & 0.967 & left & The individual stands calmly in a relaxed stance, feet hip-width apart. They glance upwards to the left, while their arms hang loosely by their sides. The hands make subtle movements, indicating a gentle sway. \\
+~ & 1.000 & 1.000 & 0.998 & left & a person with their hands on their chest and elbows out to the side flaps their elbows several time turned slightly to the right the wiggles to the left side and then wiggles to their right side and repeats the elbow flapping motion. \\
+~ & 0.999 & 1.000 & 0.998 & left & The person advances diagonally forward to the right. As they progress, their pace gradually slows. They glance around with uncertainty before turning their body to the left, changing direction smoothly. \\
+~ & 0.993 & 1.000 & 0.911 & right & a person stands still with hand to the side, until their right shoulder moves in a bummped motion. \\
+~ & 0.999 & 1.000 & 0.948 & left & The woman stands straight with her arms resting by her sides and her head turned to the left. She takes two relaxed steps forward, maintaining a calm demeanor. After stepping forward, she stands still, allowing her arms to swing slightly with minimal movement. \\
+~ & 0.999 & 1.000 & 0.999 & left & The person stands in a relaxed posture, lifting their right leg by bending the knee. They turn their head to the right, gaze momentarily at the raised leg, then gently lower it back down. Next, they swing their arms forward and backward while keeping their head slightly turned to the left. \\
+~ & 1.000 & 1.000 & 1.000 & left & The woman stands with her legs wide apart and hands behind her head, elbows bent. She performs a squat jump, bringing her arms down along her sides as she lands with her feet together. She turns her head to the left, then back, swaying her body and hands. She returns to a standing position, looking forward, with her feet shoulder-width apart, and moves her arms slightly. \\
+~ & 0.999 & 0.947 & 0.916 & forward & The person stands with legs wide apart and arms bent, extended sideways. They perform two forward-leaning squats. Afterward, they execute a small jump, bringing their legs together and lowering their arms while lifting their neck. They then step back with the right leg, slightly lowering their neck and raising their left toe. \\
+~ & 0.999 & 0.992 & 0.984 & forward & The person starts in a neutral standing position. She performs a cycle of exercises by doing two springy hip lifts forward, followed by a wide jump to the left, then a jump to the right, and returns to standing neutrally. This cycle is repeated twice, and on the third attempt, she stops after the jump to the left. \\
+~ & 0.988 & 1.000 & 0.949 & right & a person leans forward, extends his right arm to brace himself, gets down on both of his knees and picks something up with his right hand. \\
+~ & 0.994 & 1.000 & 0.984 & left & The person takes two small steps backward. As they do this, they lower their head and use their left hand to scratch the back of their neck. Following this, they raise their head and lower their left arm. Finally, they tilt their head to the left, repeating the neck-scratching motion with their left hand. \\
+~ & 0.999 & 0.579 & 0.991 & forward & The individual stands upright with arms resting naturally by her sides. She smoothly pivots 90 degrees to her left and takes relaxed steps forward, allowing her arms to sway gently. Afterward, she initially turns her head to the right, followed by her entire body, facing the new direction. \\
+~ & 0.996 & 0.999 & 0.948 & right & The person stands in a relaxed position, tilting their head forward and to the right. They focus their gaze on their right hand, which they twist gently from side to side, maintaining a calm and steady motion. \\
+~ & 0.999 & 0.995 & 0.991 & left & someone gestures with their right hand, makes a rowing motion to their right and left, then gestures in a s shape with both their hands before putting both hands in the air. \\
+~ & 0.997 & 0.989 & 0.996 & left & The person stands with legs shoulder-width apart. She slowly bends her upper body twice to the right, lowering her right hand and raising her left hand above her head, maintaining this posture throughout the motion. \\
+~ & 0.993 & 0.634 & 0.971 & backward & The person stands upright with arms relaxed at her sides. She nervously turns her head to the right and left repeatedly, shakes her arms slightly, and springs her knees as if trying to release tension. Taking three backward steps, she then stands calmly with her arms resting down. \\
+~ & 0.998 & 0.988 & 0.989 & forward & The woman holds her hands in front of her face, feet shoulder-width apart. With her head tilted left, she places her left hand on her right shoulder, right arm hanging. She straightens, tilts her head forward, raises her arms to her face, bending elbows, and slightly moves her palms. Finally, she lowers her arms, standing neutrally, feet shoulder-width apart, looking forward with arms hanging naturally. \\
+~ & 0.994 & 1.000 & 0.976 & right & an idividual in compat position wirh right leg and arm placed forward is truning clockwise while holdinf the position. \\
+~ & 0.997 & 1.000 & 0.977 & right & The person walks forward, glancing slightly downward. They halt in a neutral stance and then pivot to the right, walking forward while gradually turning their body to the right. After completing the turn, they stop, standing in a neutral position with their arms relaxed at their sides. \\
+~ & 0.999 & 1.000 & 0.998 & left & The individual stands with her torso angled right, head down, and elbows bent, hands resting on her neck. She steps forward with her left foot, lowers her arms, and lifts her head. She quickly wraps her arms around her head, elbows bent and tilts her head forward. She lowers her arms slightly, steps back, and covers her head with her hands again. She steps forward, then back, covering her head with her hands and tilting her torso right, repeating this sequence twice. \\
+~ & 0.998 & 1.000 & 0.998 & forward & The individual stands and swings her right bent arm backward while stepping back and tilting her head downward. Her bent arms move in front of her face as she tilts her head down, then slightly lowers her arms while tilting her head up, repeating the sequence. She then lowers her hands, turns slightly left, and performs the movements again, stepping forward with her right foot and turning to her right. \\
+~ & 0.996 & 1.000 & 0.946 & right & a person takes a jump sideways to their right. \\
+~ & 0.998 & 0.999 & 0.927 & left & The person leans right, lifting the left leg to the side while slightly spreading the arms. Returning to a neutral stance, feet shoulder-width apart, arms relaxed, she leans again to the right, raising the left leg with arms slightly apart. Straightening, she shifts left, repeating the sequence twice more. Finally, she stands upright, shifting weight from foot to foot. \\
+~ & 1.000 & 1.000 & 0.997 & right & The woman stands with her feet shoulder-width apart, holding an item at stomach level. She begins walking forward at a slow pace while using her right hand to carefully wipe the object, maintaining her grip with the other hand. \\
+~ & 0.995 & 1.000 & 0.937 & right & a person is walking straight, picks something up with their right arm, and then walks back, repeating this another time. \\
+~ & 0.995 & 0.636 & 0.992 & walks & The individual takes two small steps forward before stepping back with her right foot. She then slightly tilts her head while walking forward along a narrow path. As she walks, she lifts her knees high with each step, keeps her arms bent at the elbows, and maintains a focused downward gaze. \\
+
