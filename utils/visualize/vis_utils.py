@@ -5,7 +5,7 @@ import torch
 import copy
 from utils.rotation2xyz import Rotation2xyz
 from utils.visualize.simplify_loc2rot import joints2smpl
-# from trimesh import Trimesh
+from trimesh import Trimesh
 import utils.rotation_conversions as T
 
 kit_bone = [[0, 11], [11, 12], [12, 13], [13, 14], [14, 15], [0, 16], [16, 17], [17, 18], [18, 19], [19, 20], [0, 1], [1, 2], [2, 3], [3, 4], [3, 5], [5, 6], [6, 7], [3, 8], [8, 9], [9, 10]]
