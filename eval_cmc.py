@@ -157,33 +157,39 @@ def evaluate_matching_score(eval_wrapper, motion_loaders, file):
                 
         with torch.no_grad():
             for idx, batch in enumerate(motion_loader):
-                if len(batch) == 7:
-                    word_embeddings, pos_one_hots, caption, sent_lens, motions, m_lens, _ = batch
-                elif motion_loader_name == 'ground truth':
-                    # data_control.py
-                    word_embeddings, pos_one_hots, caption, sent_lens, motions, m_lens, _, _, _, _, filename = batch
+                if args.dataset_name == 'snapmogen':
+                    # SnapMoGen T5 evaluator
+                    caption, motions, m_lens = batch
+                    motions = motions.float().cuda()[...,:148]
+                    text_embeddings, _ = eval_wrapper.encode_text(caption, sample_mean=True)
+                    _, motion_embeddings, _ = eval_wrapper.encode_motion(motions, m_lens, sample_mean=True)
                 else:
-                    # comp_v6_model_dataset.py
-                    word_embeddings, pos_one_hots, caption, sent_lens, motions, m_lens, _, _, filename = batch
-                
+                    if len(batch) == 7:
+                        word_embeddings, pos_one_hots, caption, sent_lens, motions, m_lens, _ = batch
+                    elif motion_loader_name == 'ground truth':
+                        # data_control.py
+                        word_embeddings, pos_one_hots, caption, sent_lens, motions, m_lens, _, _, _, _, filename = batch
+                    else:
+                        # comp_v6_model_dataset.py
+                        word_embeddings, pos_one_hots, caption, sent_lens, motions, m_lens, _, _, filename = batch
 
-                if args.evaluator_eval is not None and 'MARDM' in args.evaluator_eval:
-                    (text_embeddings, motion_embeddings), (et_pred_clip, em_pred_clip) = eval_wrapper.get_co_embeddings(
-                        word_embs=word_embeddings,
-                        pos_ohot=pos_one_hots,
-                        cap_lens=sent_lens,
-                        captions=caption,
-                        motions=motions,
-                        m_lens=m_lens
-                    )
-                else:
-                    text_embeddings, motion_embeddings = eval_wrapper.get_co_embeddings(
-                        word_embs=word_embeddings,
-                        pos_ohot=pos_one_hots,
-                        cap_lens=sent_lens,
-                        motions=motions,
-                        m_lens=m_lens
-                    )
+                    if args.evaluator_eval is not None and 'MARDM' in args.evaluator_eval:
+                        (text_embeddings, motion_embeddings), (et_pred_clip, em_pred_clip) = eval_wrapper.get_co_embeddings(
+                            word_embs=word_embeddings,
+                            pos_ohot=pos_one_hots,
+                            cap_lens=sent_lens,
+                            captions=caption,
+                            motions=motions,
+                            m_lens=m_lens
+                        )
+                    else:
+                        text_embeddings, motion_embeddings = eval_wrapper.get_co_embeddings(
+                            word_embs=word_embeddings,
+                            pos_ohot=pos_one_hots,
+                            cap_lens=sent_lens,
+                            motions=motions,
+                            m_lens=m_lens
+                        )
                 # except: 67的评估器，有需要在用
                 #     text_embeddings, motion_embeddings = eval_wrapper.get_co_embeddings(word_embeddings, pos_one_hots, sent_lens, caption, motions[...,:67], m_lens)
 
@@ -280,14 +286,19 @@ def evaluate_fid(eval_wrapper, groundtruth_loader, activation_dict, file):
     print('========== Evaluating FID ==========')
     with torch.no_grad():
         for idx, batch in enumerate(groundtruth_loader):
-            word_embeddings, pos_one_hots, _, sent_lens, motions, m_lens, _, _, _, _, filename= batch
-            if eval_wrapper.dim_pose < 100:
-                motions=motions[...,:67]
+            if args.dataset_name == 'snapmogen':
+                caption, motions, m_lens = batch
+                motions = motions.float().cuda()[...,:148]
+                _, motion_embeddings, _ = eval_wrapper.encode_motion(motions, m_lens, sample_mean=False)
+            else:
+                word_embeddings, pos_one_hots, _, sent_lens, motions, m_lens, _, _, _, _, filename= batch
+                if eval_wrapper.dim_pose < 100:
+                    motions=motions[...,:67]
 
-            motion_embeddings = eval_wrapper.get_motion_embeddings(
-                motions=motions,
-                m_lens=m_lens
-            )
+                motion_embeddings = eval_wrapper.get_motion_embeddings(
+                    motions=motions,
+                    m_lens=m_lens
+                )
             gt_motion_embeddings.append(motion_embeddings.cpu().numpy())
     gt_motion_embeddings = np.concatenate(gt_motion_embeddings, axis=0)
     gt_mu, gt_cov = calculate_activation_statistics(gt_motion_embeddings)
@@ -369,7 +380,8 @@ def evaluation(eval_wrapper, gt_loader, eval_motion_loaders, log_file, replicati
 
             print(f'Time: {datetime.now()}')
             print(f'Time: {datetime.now()}', file=f, flush=True)
-            control_l2_dict, skating_ratio_dict, trajectory_score_dict = evaluate_control(motion_loaders, f)
+            if args.dataset_name != 'snapmogen':
+                control_l2_dict, skating_ratio_dict, trajectory_score_dict = evaluate_control(motion_loaders, f)
 
             print(f'Time: {datetime.now()}')
             print(f'Time: {datetime.now()}', file=f, flush=True)
@@ -392,11 +404,12 @@ def evaluation(eval_wrapper, gt_loader, eval_motion_loaders, log_file, replicati
             print(f'!!! DONE !!!')
             print(f'!!! DONE !!!', file=f, flush=True)
 
-            for key, item in skating_ratio_dict.items():
-                if key not in all_metrics['Skating Ratio']:
-                    all_metrics['Skating Ratio'][key] = [item]
-                else:
-                    all_metrics['Skating Ratio'][key] += [item]
+            if args.dataset_name != 'snapmogen':
+                for key, item in skating_ratio_dict.items():
+                    if key not in all_metrics['Skating Ratio']:
+                        all_metrics['Skating Ratio'][key] = [item]
+                    else:
+                        all_metrics['Skating Ratio'][key] += [item]
 
             for key, item in mat_score_dict.items():
                 if key not in all_metrics['Matching Score']:

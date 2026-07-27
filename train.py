@@ -138,6 +138,7 @@ if __name__ == '__main__':
     train_loader_iter = dataset_control.cycle(train_loader)
 
     val_batch = 100 if args.dataset_name == 'snapmogen' else 32
+    logger.info(f'val_batch = {val_batch} for dataset {args.dataset_name}')
     gt_loader = dataset_control.DataLoader(batch_size=val_batch, args=args, mode='gt', split='test', shuffle=shuffle, num_workers=0, drop_last=True)
     gen_loader = dataset_control.DataLoader(batch_size=val_batch, args=args, mode='eval', split='test', shuffle=shuffle, num_workers=0, drop_last=True) # 这里shuffle=False是为了保证每一次训练中验证都是同批数据
     logger.info(f'gen_loader shuffle = {shuffle}')

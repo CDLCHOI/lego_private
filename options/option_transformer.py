@@ -4,6 +4,7 @@ def get_args_parser():
     parser = argparse.ArgumentParser(description='Optimal Transport AutoEncoder training for Amass',
                                      add_help=True,
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--snapmogen_evaluator_train_type', type=str, default='gru', choices=['trans', 'gru'])
     parser.add_argument('--random_gt', action='store_true', default=False)
     parser.add_argument('--ablation_separate_update', action='store_true', default=False) # 高级loss只更新CLIP，MSE loss只更新MDM
     parser.add_argument('--train_sample_num', type=int, default=0)

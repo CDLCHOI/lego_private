@@ -41,16 +41,26 @@ class GaussianDiffusionSimple:
 
         # 训练用的评估器
         if self.args.dataset_name == 'snapmogen':
-            # 使用 SnapMoGen 的 evaluator（本地模块）
-            from models.snapmogen_evaluator import EvaluatorWrapper
-            from utils.config_utils import load_config
-            # 加载 SnapMoGen evaluator 配置（evaluator的dim_pose需要与checkpoint一致，此处为148）
-            eval_cfg = load_config('./SnapMoGen/checkpoint_dir/snapmogen/evaluator/eval_klde-5_late-5_nlayer6_norm/evaluator.yaml')
-            eval_model_path = self.args.evaluator_train
-            if eval_model_path is None:
-                eval_model_path = './SnapMoGen/checkpoint_dir/snapmogen/evaluator/eval_klde-5_late-5_nlayer6_norm/model/net_best_top1.tar'
-            self.eval_wrapper = EvaluatorWrapper(eval_cfg, device=torch.device('cuda'), model_path=eval_model_path)
-            self.eval_wrapper.eval()
+            if args.snapmogen_evaluator_train_type == 'trans':
+                # 使用 SnapMoGen 的 evaluator（本地模块）
+                from models.snapmogen_evaluator import EvaluatorWrapper
+                from utils.config_utils import load_config
+                # 加载 SnapMoGen evaluator 配置（evaluator的dim_pose需要与checkpoint一致，此处为148）
+                eval_cfg = load_config('./SnapMoGen/checkpoint_dir/snapmogen/evaluator/eval_klde-5_late-5_nlayer6_norm/evaluator.yaml')
+                eval_model_path = self.args.evaluator_train
+                if eval_model_path is None:
+                    eval_model_path = './SnapMoGen/checkpoint_dir/snapmogen/evaluator/eval_klde-5_late-5_nlayer6_norm/model/net_best_top1.tar'
+                self.eval_wrapper = EvaluatorWrapper(eval_cfg, device=torch.device('cuda'), model_path=eval_model_path)
+                self.eval_wrapper.eval()
+            elif args.snapmogen_evaluator_train_type == 'gru':
+                if self.args.evaluator_train is not None:
+                    print('=== using GRU evaluator train for SnapMoGen ===')
+                    self.eval_wrapper = EvaluatorMDMWrapper(self.args.dataset_name, torch.device('cuda'), self.args, self.args.evaluator_train)
+                    self.eval_wrapper.eval()
+                else:
+                    print('=== evaluator will not be used during training ===')
+            
+            
         else:
             if self.args.evaluator_train is not None:
                 if 'salad' in self.args.evaluator_train:
@@ -70,16 +80,16 @@ class GaussianDiffusionSimple:
                 print('=== args.evaluator_train is None, using default evaluator')
                 self.eval_wrapper = EvaluatorMDMWrapper(self.args.dataset_name, torch.device('cuda'), self.args, self.args.evaluator_train)
 
-        if self.args.unlock_motion_enc:
-            self.optimizer_movement_enc = torch.optim.AdamW(self.eval_wrapper.movement_encoder.parameters(),
-                                                            lr=args.lr, betas=(0.5, 0.9), weight_decay=args.weight_decay)
-            self.optimizer_motion_enc = torch.optim.AdamW(self.eval_wrapper.motion_encoder.parameters(),
-                                                            lr=args.lr, betas=(0.5, 0.9), weight_decay=args.weight_decay)
-            self.optimizer_list_enc = [self.optimizer_movement_enc, self.optimizer_motion_enc]
+        # if self.args.unlock_motion_enc:
+        #     self.optimizer_movement_enc = torch.optim.AdamW(self.eval_wrapper.movement_encoder.parameters(),
+        #                                                     lr=args.lr, betas=(0.5, 0.9), weight_decay=args.weight_decay)
+        #     self.optimizer_motion_enc = torch.optim.AdamW(self.eval_wrapper.motion_encoder.parameters(),
+        #                                                     lr=args.lr, betas=(0.5, 0.9), weight_decay=args.weight_decay)
+        #     self.optimizer_list_enc = [self.optimizer_movement_enc, self.optimizer_motion_enc]
 
-            self.scheduler_movement_enc = torch.optim.lr_scheduler.MultiStepLR(self.optimizer_movement_enc, milestones=args.lr_scheduler, gamma=args.gamma)
-            self.scheduler_motion_enc = torch.optim.lr_scheduler.MultiStepLR(self.optimizer_motion_enc, milestones=args.lr_scheduler, gamma=args.gamma)
-            self.scheduler_list_enc = [self.scheduler_movement_enc, self.scheduler_motion_enc]
+        #     self.scheduler_movement_enc = torch.optim.lr_scheduler.MultiStepLR(self.optimizer_movement_enc, milestones=args.lr_scheduler, gamma=args.gamma)
+        #     self.scheduler_motion_enc = torch.optim.lr_scheduler.MultiStepLR(self.optimizer_motion_enc, milestones=args.lr_scheduler, gamma=args.gamma)
+        #     self.scheduler_list_enc = [self.scheduler_movement_enc, self.scheduler_motion_enc]
 
         
 
@@ -393,11 +403,8 @@ class GaussianDiffusionSimple:
         print(f'Save ckpt to {ckpt_path}')
 
     def _eval_during_train(self, nb_iter):
-        
-        if self.args.dataset_name == 'snapmogen':
-            from eval_snapmogen import evaluation
-        else:
-            from eval_cmc import evaluation
+
+        from eval_cmc import evaluation
         # 重新固定随机种子，确保测试过程的随机性可控
         fixseed(self.args.seed)
         
@@ -472,8 +479,6 @@ class GaussianDiffusionSimple:
         B, L, dim = gt.shape
         msg = f' Train. Iter {iter} '
 
-        # evaluator 的输入维度（148），训练数据维度为 296
-        eval_dim = self.eval_wrapper.latent_enc.nfeats
 
         # 1. 运动重建损失 (MSE)
         motion_real_mask = real_mask[..., None].repeat(1, 1, dim)
@@ -483,6 +488,8 @@ class GaussianDiffusionSimple:
         loss += motion_loss
 
         if self.args.text_cos_loss:
+            # evaluator 的输入维度（148），训练数据维度为 296
+            eval_dim = self.eval_wrapper.latent_enc.nfeats
             text_emb, _ = self.eval_wrapper.encode_text(clip_text, sample_mean=True)  # (batch, latent_dim)
             text_emb = text_emb.to(gt.device)
             with torch.enable_grad():
