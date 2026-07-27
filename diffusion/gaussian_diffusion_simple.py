@@ -41,14 +41,15 @@ class GaussianDiffusionSimple:
 
         # 训练用的评估器
         if self.args.dataset_name == 'snapmogen':
-            # 使用 SnapMoGen 的 evaluator
-            sys.path.insert(0, '/home/deli/project/reward_mdm/SnapMoGen')
-            from SnapMoGen.model.evaluator.evaluator_wrapper import EvaluatorWrapper
-            from SnapMoGen.config.load_config import load_config
-            # 加载 SnapMoGen evaluator 配置
-            eval_cfg = load_config('/home/deli/project/reward_mdm/SnapMoGen/checkpoint_dir/snapmogen/evaluator/eval_klde-5_late-5_nlayer6_norm/evaluator.yaml')
-            eval_cfg.data.dim_pose = 296
-            self.eval_wrapper = EvaluatorWrapper(eval_cfg, device=torch.device('cuda'), model_path=self.args.evaluator_train)
+            # 使用 SnapMoGen 的 evaluator（本地模块）
+            from models.snapmogen_evaluator import EvaluatorWrapper
+            from utils.config_utils import load_config
+            # 加载 SnapMoGen evaluator 配置（evaluator的dim_pose需要与checkpoint一致，此处为148）
+            eval_cfg = load_config('./SnapMoGen/checkpoint_dir/snapmogen/evaluator/eval_klde-5_late-5_nlayer6_norm/evaluator.yaml')
+            eval_model_path = self.args.evaluator_train
+            if eval_model_path is None:
+                eval_model_path = './SnapMoGen/checkpoint_dir/snapmogen/evaluator/eval_klde-5_late-5_nlayer6_norm/model/net_best_top1.tar'
+            self.eval_wrapper = EvaluatorWrapper(eval_cfg, device=torch.device('cuda'), model_path=eval_model_path)
             self.eval_wrapper.eval()
         else:
             if self.args.evaluator_train is not None:
@@ -104,8 +105,8 @@ class GaussianDiffusionSimple:
         elif self.args.dataset_name == 'snapmogen':
             self.n_joints = 24
             # SnapMoGen 使用其数据集目录下的 mean.npy 和 std.npy
-            snapmogen_mean = np.load('./SnapMoGen/SnapMoGen/meta_data/mean.npy')
-            snapmogen_std = np.load('./SnapMoGen/SnapMoGen/meta_data/std.npy')
+            snapmogen_mean = np.load('/data/motion/SnapMoGen/meta_data/mean.npy')
+            snapmogen_std = np.load('/data/motion/SnapMoGen/meta_data/std.npy')
             self.mean = torch.from_numpy(snapmogen_mean).cuda()[None, None, ...].float()
             self.std = torch.from_numpy(snapmogen_std).cuda()[None, None, ...].float()
             # SnapMoGen 的 raw_mean 和 raw_std 暂时使用默认值
@@ -408,18 +409,20 @@ class GaussianDiffusionSimple:
                 self.args, self.gen_loader, None, None, self, 0, 0, self.args.eval_sample_num
             )
         }
-        assert self.gen_loader.batch_size == 32, self.gen_loader.batch_size
+        if self.args.dataset_name == 'snapmogen':
+            assert self.gen_loader.batch_size == 100, self.gen_loader.batch_size
+        else:
+            assert self.gen_loader.batch_size == 32, self.gen_loader.batch_size
         
         # 根据数据集类型选择 evaluator
         if self.args.dataset_name == 'snapmogen':
-            # 使用 SnapMoGen 的 evaluator
-            sys.path.insert(0, '/home/deli/project/reward_mdm/SnapMoGen')
-            from SnapMoGen.model.evaluator.evaluator_wrapper import EvaluatorWrapper
-            from SnapMoGen.config.load_config import load_config
-            
+            # 使用 SnapMoGen 的 evaluator（本地模块）
+            from models.snapmogen_evaluator import EvaluatorWrapper
+            from utils.config_utils import load_config
+
             # 加载 SnapMoGen evaluator 配置
-            eval_cfg = load_config('/home/deli/project/reward_mdm/SnapMoGen/checkpoint_dir/snapmogen/evaluator/eval_klde-5_late-5_nlayer6_norm/evaluator.yaml')
-            eval_cfg.data.root_dir = './SnapMoGen/SnapMoGen'
+            eval_cfg = load_config('./SnapMoGen/checkpoint_dir/snapmogen/evaluator/eval_klde-5_late-5_nlayer6_norm/evaluator.yaml')
+            eval_cfg.data.root_dir = '/data/motion/SnapMoGen'
             eval_cfg.exp.root_ckpt_dir = './SnapMoGen/checkpoint_dir'
             eval_wrapper = EvaluatorWrapper(eval_cfg, device=torch.device('cuda'))
             eval_wrapper.text_enc.eval()
@@ -469,6 +472,9 @@ class GaussianDiffusionSimple:
         B, L, dim = gt.shape
         msg = f' Train. Iter {iter} '
 
+        # evaluator 的输入维度（148），训练数据维度为 296
+        eval_dim = self.eval_wrapper.latent_enc.nfeats
+
         # 1. 运动重建损失 (MSE)
         motion_real_mask = real_mask[..., None].repeat(1, 1, dim)
         motion_loss = F.mse_loss(pred[motion_real_mask], gt[motion_real_mask])
@@ -480,18 +486,18 @@ class GaussianDiffusionSimple:
             text_emb, _ = self.eval_wrapper.encode_text(clip_text, sample_mean=True)  # (batch, latent_dim)
             text_emb = text_emb.to(gt.device)
             with torch.enable_grad():
-                _, pred_emb, _ = self.eval_wrapper.encode_motion(pred, real_length, sample_mean=False)  # (batch, latent_dim)
-            
+                _, pred_emb, _ = self.eval_wrapper.encode_motion(pred[..., :eval_dim], real_length, sample_mean=False)
+
             text_cos_loss = 1 - F.cosine_similarity(text_emb, pred_emb, dim=-1).mean()
             self.writer.add_scalar('Loss/text_cos_loss', text_cos_loss.item(), iter)
             loss += self.args.text_cos_loss * text_cos_loss
             msg += f" text_cos_loss. {text_cos_loss:.4f}"
 
         if self.args.cos_loss:
-            _, gt_emb, _ = self.eval_wrapper.encode_motion(gt, real_length, sample_mean=False)  # (batch, latent_dim)
+            _, gt_emb, _ = self.eval_wrapper.encode_motion(gt[..., :eval_dim], real_length, sample_mean=False)
             with torch.enable_grad():
-                _, pred_emb, _ = self.eval_wrapper.encode_motion(pred, real_length, sample_mean=False)  # (batch, latent_dim)
-            
+                _, pred_emb, _ = self.eval_wrapper.encode_motion(pred[..., :eval_dim], real_length, sample_mean=False)
+
             # 计算余弦相似度损失
             cos_loss = 1 - F.cosine_similarity(gt_emb, pred_emb, dim=-1).mean()
             self.writer.add_scalar('Loss/cos_loss', cos_loss.item(), iter)
@@ -668,17 +674,20 @@ class GaussianDiffusionSimple:
         if self.args.dataset_name == 't2m':
             motion_dim = 263
             ric_dim = 67
+            seq_len = 196
         elif self.args.dataset_name == 'kit':
             motion_dim = 251
             ric_dim = 64
+            seq_len = 196
         elif self.args.dataset_name == 'snapmogen':
             motion_dim = 296
             ric_dim = 73  # 24 joints * 3 - 1 (root) = 71, but SnapMoGen uses 296 dim
+            seq_len = self.args.max_motion_length  # 320 for SnapMoGen
         else:
             raise NotImplementedError
 
         if self.modeltype in ['mdm','salad', 'mdm_bert']:
-            noise = torch.randn((B,196,motion_dim)).cuda()
+            noise = torch.randn((B, seq_len, motion_dim)).cuda()
         else:
             print('self.modeltype = ', self.modeltype)
             raise ValueError('Unknown model type')

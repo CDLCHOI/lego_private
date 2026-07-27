@@ -207,7 +207,7 @@ class CompSnapMoGen(Dataset):
                         t_init = torch.tensor(args.test_with_noisy_step).repeat(b).cuda()
                         sample = diffusion.q_sample(gt_motion, t_init)
                     else:
-                        sample = diffusion.p_sample_loop(partial_emb, with_control=True, model_kwargs=model_kwargs, batch_size=32) # (b, 196, 263)
+                        sample = diffusion.p_sample_loop(partial_emb, with_control=True, model_kwargs=model_kwargs, batch_size=100) # (b, 196, 263)
 
                 # vis_motion(motion1=sample[0], motion2=gt_motion[0], save_path='visualization/1.html', vis=True)
 
@@ -216,7 +216,7 @@ class CompSnapMoGen(Dataset):
                                 'length': real_length[bs_i].cpu().numpy(),
                                 'caption': clip_text[bs_i],
                                 } for bs_i in range(gen_loader.batch_size)]
-                    
+
                     generated_motion += sub_dicts
                     
                 if is_mm:

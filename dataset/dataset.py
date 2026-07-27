@@ -4,7 +4,6 @@ import numpy as np
 import os
 from os.path import join as pjoin
 import random
-import codecs as cs
 from tqdm import tqdm
 import spacy
 
@@ -30,7 +29,7 @@ class Text2MotionDataset(data.Dataset):
 
         data_dict = {}
         id_list = []
-        with cs.open(split_file, 'r') as f:
+        with open(split_file, 'r') as f:
             for line in f.readlines():
                 id_list.append(line.strip())
 
@@ -43,7 +42,7 @@ class Text2MotionDataset(data.Dataset):
                     continue
                 text_data = []
                 flag = False
-                with cs.open(pjoin(opt.text_dir, name + '.txt')) as f:
+                with open(pjoin(opt.text_dir, name + '.txt')) as f:
                     for line in f.readlines():
                         text_dict = {}
                         line_split = line.strip().split('#')
@@ -213,7 +212,7 @@ class Text2MotionDatasetV2(data.Dataset):
 
         data_dict = {}
         id_list = []
-        with cs.open(split_file, 'r') as f:
+        with open(split_file, 'r') as f:
             for line in f.readlines():
                 id_list.append(line.strip())
         # id_list = id_list[:200]
@@ -227,7 +226,7 @@ class Text2MotionDatasetV2(data.Dataset):
                     continue
                 text_data = []
                 flag = False
-                with cs.open(pjoin(opt.text_dir, name + '.txt')) as f:
+                with open(pjoin(opt.text_dir, name + '.txt')) as f:
                     for line in f.readlines():
                         text_dict = {}
                         line_split = line.strip().split('#')
@@ -355,7 +354,7 @@ class Text2MotionDatasetBaseline(data.Dataset):
 
         data_dict = {}
         id_list = []
-        with cs.open(split_file, 'r') as f:
+        with open(split_file, 'r') as f:
             for line in f.readlines():
                 id_list.append(line.strip())
         # id_list = id_list[:200]
@@ -369,7 +368,7 @@ class Text2MotionDatasetBaseline(data.Dataset):
                     continue
                 text_data = []
                 flag = False
-                with cs.open(pjoin(opt.text_dir, name + '.txt')) as f:
+                with open(pjoin(opt.text_dir, name + '.txt')) as f:
                     for line in f.readlines():
                         text_dict = {}
                         line_split = line.strip().split('#')
@@ -506,7 +505,7 @@ class MotionDatasetV2(data.Dataset):
         self.data = []
         self.lengths = []
         id_list = []
-        with cs.open(split_file, 'r') as f:
+        with open(split_file, 'r') as f:
             for line in f.readlines():
                 id_list.append(line.strip())
 
@@ -580,7 +579,7 @@ class RawTextDataset(data.Dataset):
         self.data_dict = []
         self.nlp = spacy.load('en_core_web_sm')
 
-        with cs.open(text_file) as f:
+        with open(text_file) as f:
             for line in f.readlines():
                 word_list, pos_list = self.process_text(line.strip())
                 tokens = ['%s/%s'%(word_list[i], pos_list[i]) for i in range(len(word_list))]

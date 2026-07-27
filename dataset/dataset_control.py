@@ -6,11 +6,12 @@ from os.path import join as pjoin
 import random
 import codecs as cs
 from tqdm import tqdm
-from SnapMoGen.dataset.dataset import TextMotionDataset
+from dataset.snapmogen_dataset import TextMotionDataset as SnapMoGenTextMotionDataset
 from torch.utils.data._utils.collate import default_collate
 from utils.word_vectorizer import WordVectorizer
 from data_loaders.humanml.utils.get_opt import get_opt
 from utils.motion_process import recover_root_rot_pos, recover_from_ric, recover_from_rot
+from utils.config_utils import load_config
 import sys
 
 from data_loaders.humanml.utils.paramUtil import t2m_raw_offsets, t2m_kinematic_chain
@@ -509,20 +510,18 @@ def DataLoader(batch_size, args, shuffle=False, mode='train', split='train', num
         shuffle = False
 
     if args.dataset_name == 'snapmogen':
-        # sys.path.insert(0, '/home/deli/project/reward_mdm/SnapMoGen')
-        from SnapMoGen.dataset.dataset import TextMotionDataset
-        from SnapMoGen.config.load_config import load_config
-        
+        from dataset.snapmogen_dataset import TextMotionDataset
+
         # 加载配置
-        cfg = load_config('/home/deli/project/reward_mdm/SnapMoGen/config/eval_momaskplus.yaml')
-        
-        # 设置数据路径
-        cfg.data.root_dir = './SnapMoGen/SnapMoGen'
+        cfg = load_config('./SnapMoGen/config/eval_momaskplus.yaml')
+
+        # 设置数据路径（数据实际位于 /data/motion/SnapMoGen）
+        cfg.data.root_dir = '/data/motion/SnapMoGen'
         cfg.data.feat_dir = pjoin(cfg.data.root_dir, 'renamed_feats')
         meta_dir = pjoin(cfg.data.root_dir, 'meta_data')
         data_split_dir = pjoin(cfg.data.root_dir, 'data_split_info')
         all_caption_path = pjoin(cfg.data.root_dir, 'all_caption_clean.json')
-        
+
         # 根据模式选择数据分割
         if split == 'train':
             mid_split_file = pjoin(data_split_dir, 'train_fnames.txt')
@@ -530,12 +529,12 @@ def DataLoader(batch_size, args, shuffle=False, mode='train', split='train', num
         else:
             mid_split_file = pjoin(data_split_dir, 'test_fnames.txt')
             cid_split_file = pjoin(data_split_dir, 'test_ids.txt')
-        
+
         # 加载均值和标准差
         mean = np.load(pjoin(meta_dir, 'mean.npy'))
         std = np.load(pjoin(meta_dir, 'std.npy'))
-        
-        # 直接使用 SnapMoGen 的 TextMotionDataset
+
+        # 使用本地 SnapMoGen 的 TextMotionDataset
         dataset = TextMotionDataset(cfg, mean, std, mid_split_file, cid_split_file, all_caption_path)
         train_loader = torch.utils.data.DataLoader(dataset, batch_size, collate_fn=None, shuffle=shuffle, num_workers=num_workers, drop_last=drop_last)
         return train_loader

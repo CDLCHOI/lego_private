@@ -35,6 +35,12 @@ if __name__ == '__main__':
 
     fixseed(args.seed)
 
+    # SnapMoGen 数据集特殊设置
+    if args.dataset_name == 'snapmogen':
+        if args.max_motion_length == 196:  # 未通过命令行显式指定
+            args.max_motion_length = 320
+            print(f'[SnapMoGen] auto-set max_motion_length = {args.max_motion_length}')
+
     # 训练前准备
     args.out_dir = pjoin(args.out_dir, args.exp_name) # output/trans_exp_name
     if args.overwrite and os.path.exists(args.out_dir):
@@ -131,9 +137,9 @@ if __name__ == '__main__':
     train_loader = dataset_control.DataLoader(batch_size=args.batch_size, args=args, mode=args.mode, diffusion=diffusion, shuffle=shuffle)
     train_loader_iter = dataset_control.cycle(train_loader)
 
-    
-    gt_loader = dataset_control.DataLoader(batch_size=32, args=args, mode='gt', split='test', shuffle=shuffle, num_workers=0, drop_last=True)
-    gen_loader = dataset_control.DataLoader(batch_size=32, args=args, mode='eval', split='test', shuffle=shuffle, num_workers=0, drop_last=True) # 这里shuffle=False是为了保证每一次训练中验证都是同批数据
+    val_batch = 100 if args.dataset_name == 'snapmogen' else 32
+    gt_loader = dataset_control.DataLoader(batch_size=val_batch, args=args, mode='gt', split='test', shuffle=shuffle, num_workers=0, drop_last=True)
+    gen_loader = dataset_control.DataLoader(batch_size=val_batch, args=args, mode='eval', split='test', shuffle=shuffle, num_workers=0, drop_last=True) # 这里shuffle=False是为了保证每一次训练中验证都是同批数据
     logger.info(f'gen_loader shuffle = {shuffle}')
     
     if args.ablation_separate_update:
