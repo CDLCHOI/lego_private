@@ -45,8 +45,9 @@ class GaussianDiffusionSimple:
                 # 使用 SnapMoGen 的 evaluator（本地模块）
                 from models.snapmogen_evaluator import EvaluatorWrapper
                 from utils.config_utils import load_config
-                # 加载 SnapMoGen evaluator 配置（evaluator的dim_pose需要与checkpoint一致，此处为148）
+                # 加载 SnapMoGen evaluator 配置，dim_pose 通过 args.evaluator_train_dim_pose 控制（148 或 292）
                 eval_cfg = load_config('./SnapMoGen/checkpoint_dir/snapmogen/evaluator/eval_klde-5_late-5_nlayer6_norm/evaluator.yaml')
+                eval_cfg.data.dim_pose = self.args.evaluator_train_dim_pose
                 eval_model_path = self.args.evaluator_train
                 if eval_model_path is None:
                     eval_model_path = './SnapMoGen/checkpoint_dir/snapmogen/evaluator/eval_klde-5_late-5_nlayer6_norm/model/net_best_top1.tar'
@@ -56,7 +57,7 @@ class GaussianDiffusionSimple:
                 if self.args.evaluator_train is not None:
                     print('=== using GRU evaluator train for SnapMoGen ===')
                     self.eval_wrapper = EvaluatorMDMWrapper(self.args.dataset_name, torch.device('cuda'), self.args, self.args.evaluator_train)
-                    self.eval_wrapper.eval()
+                    # EvaluatorMDMWrapper 已在 __init__ 中设置好各 encoder 的 train/eval 状态，无需额外调用 .eval()
                 else:
                     print('=== evaluator will not be used during training ===')
             
@@ -429,6 +430,7 @@ class GaussianDiffusionSimple:
 
             # 加载 SnapMoGen evaluator 配置
             eval_cfg = load_config('./SnapMoGen/checkpoint_dir/snapmogen/evaluator/eval_klde-5_late-5_nlayer6_norm/evaluator.yaml')
+            eval_cfg.data.dim_pose = self.args.evaluator_train_dim_pose
             eval_cfg.data.root_dir = '/data/motion/SnapMoGen'
             eval_cfg.exp.root_ckpt_dir = './SnapMoGen/checkpoint_dir'
             eval_wrapper = EvaluatorWrapper(eval_cfg, device=torch.device('cuda'))
@@ -500,6 +502,13 @@ class GaussianDiffusionSimple:
         B, L, dim = gt.shape
         msg = f' Train. Iter {iter} '
 
+        # 判断 evaluator 类型：T5 (有 latent_enc) vs GRU (EvaluatorMDMWrapper)
+        is_t5_evaluator = hasattr(self.eval_wrapper, 'latent_enc')
+        if is_t5_evaluator:
+            eval_dim = self.eval_wrapper.latent_enc.nfeats
+        else:
+            # GRU evaluator: dim_pose 包含 contacts 维度
+            eval_dim = self.eval_wrapper.dim_pose
 
         # 1. 运动重建损失 (MSE)
         motion_real_mask = real_mask[..., None].repeat(1, 1, dim)
@@ -509,12 +518,17 @@ class GaussianDiffusionSimple:
         loss += motion_loss
 
         if self.args.text_cos_loss:
-            # evaluator 的输入维度（148），训练数据维度为 296
-            eval_dim = self.eval_wrapper.latent_enc.nfeats
-            text_emb, _ = self.eval_wrapper.encode_text(clip_text, sample_mean=True)  # (batch, latent_dim)
-            text_emb = text_emb.to(gt.device)
-            with torch.enable_grad():
-                _, pred_emb, _ = self.eval_wrapper.encode_motion(pred[..., :eval_dim], real_length, sample_mean=False)
+            if is_t5_evaluator:
+                text_emb, _ = self.eval_wrapper.encode_text(clip_text, sample_mean=True)
+                text_emb = text_emb.to(gt.device)
+                with torch.enable_grad():
+                    _, pred_emb, _ = self.eval_wrapper.encode_motion(pred[..., :eval_dim], real_length, sample_mean=False)
+            else:
+                raise RuntimeError(
+                    'text_cos_loss 需要 T5 evaluator，但当前使用的是 GRU evaluator。'
+                    '请添加 --snapmogen_evaluator_train_type trans 来使用 T5 evaluator，'
+                    '或者去掉 --text_cos_loss 参数。'
+                )
 
             text_cos_loss = 1 - F.cosine_similarity(text_emb, pred_emb, dim=-1).mean()
             self.writer.add_scalar('Loss/text_cos_loss', text_cos_loss.item(), iter)
@@ -522,9 +536,18 @@ class GaussianDiffusionSimple:
             msg += f" text_cos_loss. {text_cos_loss:.4f}"
 
         if self.args.cos_loss:
-            _, gt_emb, _ = self.eval_wrapper.encode_motion(gt[..., :eval_dim], real_length, sample_mean=False)
-            with torch.enable_grad():
-                _, pred_emb, _ = self.eval_wrapper.encode_motion(pred[..., :eval_dim], real_length, sample_mean=False)
+            if is_t5_evaluator:
+                _, gt_emb, _ = self.eval_wrapper.encode_motion(gt[..., :eval_dim], real_length, sample_mean=False)
+                with torch.enable_grad():
+                    _, pred_emb, _ = self.eval_wrapper.encode_motion(pred[..., :eval_dim], real_length, sample_mean=False)
+            else:
+                # GRU evaluator: gt 无需梯度，pred 需要梯度
+                gt_emb = self.eval_wrapper.get_motion_embeddings(
+                    gt[..., :eval_dim], real_length
+                )
+                pred_emb = self.eval_wrapper.get_motion_embeddings_with_grad(
+                    pred[..., :eval_dim], real_length
+                )
 
             # 计算余弦相似度损失
             cos_loss = 1 - F.cosine_similarity(gt_emb, pred_emb, dim=-1).mean()

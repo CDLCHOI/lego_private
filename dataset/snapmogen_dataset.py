@@ -81,40 +81,97 @@ class CommonMotionDataset(data.Dataset):
 
 
 class TextMotionDataset(CommonMotionDataset):
-    """SnapMoGen 文本-动作数据集"""
-    def __init__(self, cfg, mean, std, mid_list_path, cid_list_path, all_caption_path, is_debug=False):
+    """SnapMoGen 文本-动作数据集
+
+    支持两种模式：
+    1. 基础模式（无 w_vectorizer）：返回 (caption, motion, m_length)
+    2. 文本向量化模式（提供 w_vectorizer）：返回 (word_embeddings, pos_one_hots, caption,
+       sent_len, motion, m_length, tokens_str)
+    """
+    def __init__(self, cfg, mean, std, mid_list_path, cid_list_path, all_caption_path,
+                 w_vectorizer=None, opt=None, is_debug=False):
         super().__init__(cfg, mean, std, mid_list_path, cid_list_path, is_debug=is_debug)
 
         with open(all_caption_path, "r") as f:
             self.all_captions = json.load(f)
 
+        self.w_vectorizer = w_vectorizer
+        self.opt = opt
+
+        if w_vectorizer is not None:
+            import spacy
+            self.nlp = spacy.load('en_core_web_sm')
+
     def __getitem__(self, item):
+        # ── 1. 加载运动数据（已完成 Z-normalization） ──
         motion, cid = super().__getitem__(item)
+
+        # ── 2. 加载文本标注 ──
         captions = self.all_captions[cid]["manual"] + self.all_captions[cid]["gpt"]
         caption = random.choice(captions)
+
+        # ── 3. 运动长度处理 ──
+        # 确定 unit_length：优先使用 opt.unit_length，否则使用 cfg.data.unit_length
+        unit_length = self.opt.unit_length if self.opt is not None else self.cfg.data.unit_length
+
         m_length = (
             len(motion)
             if len(motion) < self.cfg.data.max_motion_length
             else self.cfg.data.max_motion_length
         )
 
-        m_length = (
-                m_length // self.cfg.data.unit_length
-            ) * self.cfg.data.unit_length
+        m_length = (m_length // unit_length) * unit_length
 
+        # 随机裁剪
         idx = random.randint(0, len(motion) - m_length)
-        motion = motion[idx : idx + m_length]
+        motion = motion[idx: idx + m_length]
+
+        # Zero-padding 到 max_motion_length
         if m_length < self.cfg.data.max_motion_length:
             motion = np.concatenate(
-                [
-                    motion,
-                    np.zeros(
-                        (self.cfg.data.max_motion_length - m_length, motion.shape[1])
-                    ),
-                ],
+                [motion,
+                 np.zeros((self.cfg.data.max_motion_length - m_length, motion.shape[1]))],
                 axis=0,
             )
 
+        # ── 4. 文本向量化（如果提供了 w_vectorizer） ──
+        if self.w_vectorizer is not None:
+            # spacy tokenization
+            doc = self.nlp(caption)
+
+            tokens = []
+            for token in doc:
+                word = token.text
+                if not word.isalpha():
+                    continue
+                if (token.pos_ == 'NOUN' or token.pos_ == 'VERB') and (word != 'left'):
+                    tokens.append(token.lemma_ + '/' + token.pos_)
+                else:
+                    tokens.append(word + '/' + token.pos_)
+
+            # 截断/填充到 opt.max_text_len + 2（sos + eos）
+            if len(tokens) < self.opt.max_text_len:
+                tokens = ['sos/OTHER'] + tokens + ['eos/OTHER']
+                sent_len = len(tokens)
+                tokens = tokens + ['unk/OTHER'] * (self.opt.max_text_len + 2 - sent_len)
+            else:
+                tokens = tokens[:self.opt.max_text_len]
+                tokens = ['sos/OTHER'] + tokens + ['eos/OTHER']
+                sent_len = len(tokens)
+
+            # 通过 w_vectorizer 转换为 word_embeddings 和 pos_one_hots
+            pos_one_hots = []
+            word_embeddings = []
+            for token in tokens:
+                word_emb, pos_oh = self.w_vectorizer[token]
+                pos_one_hots.append(pos_oh[None, :])
+                word_embeddings.append(word_emb[None, :])
+            pos_one_hots = np.concatenate(pos_one_hots, axis=0)
+            word_embeddings = np.concatenate(word_embeddings, axis=0)
+
+            return word_embeddings, pos_one_hots, caption, sent_len, motion, m_length, '_'.join(tokens)
+
+        # 基础模式：不进行文本向量化
         return caption, motion, m_length
 
 

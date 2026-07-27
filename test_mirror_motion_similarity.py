@@ -116,7 +116,8 @@ def main():
     )
     parser.add_argument(
         '--checkpoint', type=str,
-        default='/home/deli/project/text-to-motion/checkpoints/t2m/0716_evaluator32_infosim_fixmovement_cos5/model/finest.tar',
+        # default='/home/deli/project/text-to-motion/checkpoints/t2m/0716_evaluator32_infosim_fixmovement_cos5/model/finest.tar',
+        default='checkpoints/t2m/text_mot_match/model/finest.tar',
         help='Evaluator checkpoint 路径'
     )
     parser.add_argument(

@@ -59,6 +59,11 @@ class EvaluatorMDMWrapper(object):
             dim_pose = 296
         else:
             raise ValueError(f'Unknown dataset name: {dataset_name}')
+        # 允许通过 args.evaluator_train_dim_pose 覆盖 dim_pose（用于加载不同维度配置的 evaluator checkpoint）
+        if hasattr(args, 'evaluator_train_dim_pose') and args.evaluator_train_dim_pose is not None:
+            # evaluator_train_dim_pose 表示 motion encoder 的输入维度，而 MovementConvEncoder
+            # 的输入是 dim_pose - 4，因此这里需要 +4 保持在 build_evaluators 中一致
+            dim_pose = args.evaluator_train_dim_pose + 4
         
         opt = {
             'dataset_name': dataset_name,
