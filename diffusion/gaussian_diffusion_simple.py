@@ -66,7 +66,19 @@ class GaussianDiffusionSimple:
                 print('=== args.evaluator_train is None, using default evaluator')
                 self.eval_wrapper = EvaluatorMDMWrapper(self.args.dataset_name, torch.device('cuda'), self.args, self.args.evaluator_train)
             elif self.args.evaluator_train_type =='tmr':
-                pass
+                from models.tmr_evaluator import TMREvaluatorWrapper
+                tmr_ckpt_dir = self.args.evaluator_train
+                if tmr_ckpt_dir is None:
+                    # 默认 TMR HumanML3D 预训练权重路径
+                    tmr_ckpt_dir = './TMR/models/models/tmr_humanml3d_guoh3dfeats'
+                print(f'=== Loading TMR evaluator from {tmr_ckpt_dir} ===')
+                self.eval_wrapper = TMREvaluatorWrapper(
+                    ckpt_dir=tmr_ckpt_dir,
+                    device=torch.device('cuda'),
+                    hml_mean_std_dir='dataset/HumanML3D'
+                    if self.args.dataset_name in ('t2m',) else 'dataset/KIT-ML',
+                )
+                self.eval_wrapper.train()  # 允许梯度通过（用于训练损失）
 
         # if self.args.unlock_motion_enc:
         #     self.optimizer_movement_enc = torch.optim.AdamW(self.eval_wrapper.movement_encoder.parameters(),
@@ -265,7 +277,7 @@ class GaussianDiffusionSimple:
             if self.args.dataset_name == 'snapmogen':
                 loss, msg = self._calc_mdm_loss_snapmogen(x0, pred_x0, real_length, real_mask, nb_iter, clip_text)
             else:
-                loss, msg = self._calc_mdm_loss(x0, pred_x0, real_length, real_mask, nb_iter, word_embeddings, pos_one_hots, sent_len, optimizer, scheduler, optimizer_clip=optimizer_clip)
+                loss, msg = self._calc_mdm_loss(x0, pred_x0, real_length, real_mask, nb_iter, word_embeddings, pos_one_hots, sent_len, optimizer, scheduler, optimizer_clip=optimizer_clip, clip_text=clip_text)
             
 
             optimizer.zero_grad()
@@ -424,7 +436,24 @@ class GaussianDiffusionSimple:
             eval_wrapper.latent_enc.eval()
 
         else:
-            if self.args.evaluator_eval is not None:
+            if self.args.evaluator_eval_type == 'tmr':
+                # 使用 TMR evaluator 进行验证
+                from models.tmr_evaluator import TMREvaluatorWrapper
+                tmr_ckpt_dir = self.args.evaluator_eval if self.args.evaluator_eval is not None else self.args.evaluator_train
+                if tmr_ckpt_dir is None:
+                    tmr_ckpt_dir = './TMR/models/models/tmr_humanml3d_guoh3dfeats'
+                print(f'=== [Eval] Loading TMR evaluator from {tmr_ckpt_dir} ===')
+                eval_wrapper = TMREvaluatorWrapper(
+                    ckpt_dir=tmr_ckpt_dir,
+                    device=torch.device('cuda'),
+                    hml_mean_std_dir='dataset/HumanML3D'
+                    if self.args.dataset_name in ('t2m',) else 'dataset/KIT-ML',
+                )
+                eval_wrapper.eval()
+
+                eval_wrapper.text_encoder.eval()
+                eval_wrapper.motion_encoder.eval()
+            elif self.args.evaluator_eval is not None:
                 if 'salad' in self.args.evaluator_eval:
                     opt = self.args
                     opt.device = 'cuda:0' # 自己加的
@@ -432,7 +461,7 @@ class GaussianDiffusionSimple:
                     opt.activation = 'gelu'
                     opt.n_layers = 2
                     opt.n_extra_layers = 1
-                    opt.kernel_size = 3 
+                    opt.kernel_size = 3
                     opt.norm = 'none'
                     opt.dropout = 0.1
                     eval_wrapper = EvaluatorModelWrapperSALAD(opt, self.args.evaluator_eval)
@@ -440,12 +469,16 @@ class GaussianDiffusionSimple:
                     eval_wrapper = EvaluatorMARDM(self.args.dataset_name, torch.device('cuda'))
                 else:
                     eval_wrapper = EvaluatorMDMWrapper(self.args.dataset_name, torch.device('cuda'), self.args, self.args.evaluator_eval)
+                eval_wrapper.text_encoder.eval()
+                eval_wrapper.motion_encoder.eval()
+                eval_wrapper.movement_encoder.eval()
             else:
                 eval_wrapper = EvaluatorMDMWrapper(self.args.dataset_name, torch.device('cuda'), self.args, self.args.evaluator_eval)
+                
+                eval_wrapper.text_encoder.eval()
+                eval_wrapper.motion_encoder.eval()
+                eval_wrapper.movement_encoder.eval()
 
-            eval_wrapper.text_encoder.eval()
-            eval_wrapper.motion_encoder.eval()
-            eval_wrapper.movement_encoder.eval() 
 
         # ['Matching Score_ground truth', 'Matching Score_vald', 'R_precision_ground truth', 'R_precision_vald', 'FID_ground truth', 'FID_vald', 'Diversity_ground truth', 'Diversity_vald']
         metric_dict = evaluation(eval_wrapper, self.gt_loader, eval_motion_loaders, self.log_file)
@@ -502,7 +535,7 @@ class GaussianDiffusionSimple:
         return loss, msg
 
     
-    def _calc_mdm_loss(self, gt, pred, real_length, real_mask, iter, word_embeddings, pos_one_hots, sent_len, optimizer, scheduler, optimizer_clip=None):
+    def _calc_mdm_loss(self, gt, pred, real_length, real_mask, iter, word_embeddings, pos_one_hots, sent_len, optimizer, scheduler, optimizer_clip=None, clip_text=None):
         loss = 0
         B,L,dim = gt.shape
         msg = f' Train. Iter {iter} '
@@ -540,9 +573,13 @@ class GaussianDiffusionSimple:
             msg += f" ric_rot. {ric_rot_loss:.5f}"
 
         if self.args.text_emb_loss or self.args.text_cos_loss or self.args.text_infonce_loss:
-            
-            text_emb, pred_emb = self.eval_wrapper.get_co_embeddings_with_grad(word_embeddings, pos_one_hots, sent_len, pred, real_length)
-            text_emb, gt_emb = self.eval_wrapper.get_co_embeddings_with_grad(word_embeddings, pos_one_hots, sent_len, gt, real_length)
+            if self.args.evaluator_train_type == 'tmr':
+                # TMR evaluator 使用 raw text strings 而非 word_embeddings/pos_ohot
+                text_emb, pred_emb = self.eval_wrapper.get_co_embeddings_with_grad(clip_text, pred, real_length)
+                text_emb, gt_emb = self.eval_wrapper.get_co_embeddings_with_grad(clip_text, gt, real_length)
+            else:
+                text_emb, pred_emb = self.eval_wrapper.get_co_embeddings_with_grad(word_embeddings, pos_one_hots, sent_len, pred, real_length)
+                text_emb, gt_emb = self.eval_wrapper.get_co_embeddings_with_grad(word_embeddings, pos_one_hots, sent_len, gt, real_length)
             
             if self.args.text_emb_loss:
                 text_emb_loss = F.mse_loss(text_emb, pred_emb)

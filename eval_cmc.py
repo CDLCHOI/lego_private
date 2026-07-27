@@ -144,6 +144,11 @@ def evaluate_matching_score(eval_wrapper, motion_loaders, file):
     emb_dict = {'ground truth':[], 'vald':[]}
 
     for motion_loader_name, motion_loader in motion_loaders.items():
+        # TMR evaluator: GT 数据在 meta 域, vald 数据在 hml 域
+        if hasattr(eval_wrapper, 'set_norm_domain'):
+            domain = 'meta' if motion_loader_name == 'ground truth' else 'hml'
+            eval_wrapper.set_norm_domain(domain)
+
         all_motion_embeddings = []
         score_list = []
         all_size = 0
@@ -154,7 +159,7 @@ def evaluate_matching_score(eval_wrapper, motion_loaders, file):
         matching_score_sim_sum = 0
 
         clip_score_real = 0
-                
+
         with torch.no_grad():
             for idx, batch in enumerate(motion_loader):
                 if args.dataset_name == 'snapmogen':
@@ -183,13 +188,24 @@ def evaluate_matching_score(eval_wrapper, motion_loaders, file):
                             m_lens=m_lens
                         )
                     else:
-                        text_embeddings, motion_embeddings = eval_wrapper.get_co_embeddings(
-                            word_embs=word_embeddings,
-                            pos_ohot=pos_one_hots,
-                            cap_lens=sent_lens,
-                            motions=motions,
-                            m_lens=m_lens
-                        )
+                        if args.evaluator_train_type == 'tmr':
+                            # TMR evaluator 使用 raw text (captions) 编码文本
+                            text_embeddings, motion_embeddings = eval_wrapper.get_co_embeddings(
+                                word_embs=word_embeddings,
+                                pos_ohot=pos_one_hots,
+                                cap_lens=sent_lens,
+                                motions=motions,
+                                m_lens=m_lens,
+                                captions=caption
+                            )
+                        else:
+                            text_embeddings, motion_embeddings = eval_wrapper.get_co_embeddings(
+                                word_embs=word_embeddings,
+                                pos_ohot=pos_one_hots,
+                                cap_lens=sent_lens,
+                                motions=motions,
+                                m_lens=m_lens
+                            )
                 # except: 67的评估器，有需要在用
                 #     text_embeddings, motion_embeddings = eval_wrapper.get_co_embeddings(word_embeddings, pos_one_hots, sent_lens, caption, motions[...,:67], m_lens)
 
@@ -284,6 +300,11 @@ def evaluate_fid(eval_wrapper, groundtruth_loader, activation_dict, file):
     eval_dict = OrderedDict({})
     gt_motion_embeddings = []
     print('========== Evaluating FID ==========')
+
+    # TMR evaluator: GT 数据在 meta 归一化域
+    if hasattr(eval_wrapper, 'set_norm_domain'):
+        eval_wrapper.set_norm_domain('meta')
+
     with torch.no_grad():
         for idx, batch in enumerate(groundtruth_loader):
             if args.dataset_name == 'snapmogen':
@@ -326,6 +347,11 @@ def evaluate_diversity(activation_dict, file, diversity_times):
 def evaluate_multimodality(eval_wrapper, mm_motion_loaders, file, mm_num_times):
     eval_dict = OrderedDict({})
     print('========== Evaluating MultiModality ==========')
+
+    # TMR evaluator: 生成数据在 hml 归一化域
+    if hasattr(eval_wrapper, 'set_norm_domain'):
+        eval_wrapper.set_norm_domain('hml')
+
     for model_name, mm_motion_loader in mm_motion_loaders.items():
         mm_motion_embeddings = []
         with torch.no_grad():

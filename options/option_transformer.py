@@ -4,6 +4,7 @@ def get_args_parser():
     parser = argparse.ArgumentParser(description='Optimal Transport AutoEncoder training for Amass',
                                      add_help=True,
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--evaluator_eval_type', type=str, default='gru', choices=['gru', 'tmr'])
     parser.add_argument('--evaluator_train_type', type=str, default='gru', choices=['gru', 'snapmogen', 'tmr'])
     parser.add_argument('--snapmogen_evaluator_train_type', type=str, default='gru', choices=['trans', 'gru'])
     parser.add_argument('--random_gt', action='store_true', default=False)
