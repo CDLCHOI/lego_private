@@ -7,6 +7,7 @@ from .BERT_encoder import load_bert
 from utils.lora_util import apply_lora_attn_mlp
 from data_loaders.humanml.networks.modules import TextEncoderBiGRUCo
 from data_loaders.humanml.utils.word_vectorizer import POS_enumerator
+from models.LAMP.LAMP_minimal_text_net import Net as LAMPNet
 
 class MDMBERT(nn.Module):
     def __init__(self, args, modeltype, njoints, nfeats, num_actions, translation, pose_rep, glob, glob_rot,
@@ -113,8 +114,13 @@ class MDMBERT(nn.Module):
                 elif self.text_encoder_type == 'gru':
                     self.clip_model = self.load_and_freeze_gru()
                     self.encode_text = self.gru_encode_text
+                elif self.text_encoder_type == 'lamp':
+                    print("Loading LAMP...")
+                    self.clip_model = self.load_and_freeze_lamp()
+                    self.encode_text = self.lamp_encode_text
+                    self.clip_dim = 1408
                 else:
-                    raise ValueError('We only support [CLIP, BERT] text encoders') 
+                    raise ValueError('We only support [CLIP, BERT, GRU, LAMP] text encoders')
                 
                 self.embed_text = nn.Linear(self.clip_dim, self.latent_dim)
                 
@@ -165,6 +171,19 @@ class MDMBERT(nn.Module):
             p.requires_grad = False
         
         return clip_model
+
+    def load_and_freeze_lamp(self):
+        lamp_model = LAMPNet()
+        lamp_model.eval()
+        for p in lamp_model.parameters():
+            p.requires_grad = False
+        return lamp_model
+
+    def lamp_encode_text(self, raw_text):
+        # raw_text - list (batch_size length) of strings with input text prompts
+        # LAMP's Net.forward handles tokenization internally and returns (bs, 1408)
+        text_embedding = self.clip_model(raw_text)  # (bs, 1408)
+        return text_embedding.unsqueeze(0)  # (1, bs, 1408)
 
     def mask_cond(self, cond, force_mask=False):
         bs = cond.shape[-2]
@@ -256,7 +275,7 @@ class MDMBERT(nn.Module):
                 xseq = x
             xseq = self.sequence_pos_encoder(xseq)  # [seqlen+1, bs, d]
 
-            if self.text_encoder_type in ['clip', 'gru']:
+            if self.text_encoder_type in ['clip', 'gru', 'lamp']:
                 output = self.seqTransDecoder(tgt=xseq, memory=emb, tgt_key_padding_mask=frames_mask)
             elif self.text_encoder_type == 'bert':
                 output = self.seqTransDecoder(tgt=xseq, memory=emb, memory_key_padding_mask=text_mask, tgt_key_padding_mask=frames_mask)  # Rotem's bug fix

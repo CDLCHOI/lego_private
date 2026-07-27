@@ -62,23 +62,11 @@ class GaussianDiffusionSimple:
             
             
         else:
-            if self.args.evaluator_train is not None:
-                if 'salad' in self.args.evaluator_train:
-                    opt = self.args
-                    opt.device = 'cuda:0' # 自己加的
-                    opt.latent_dim = 32
-                    opt.activation = 'gelu'
-                    opt.n_layers = 2
-                    opt.n_extra_layers = 1
-                    opt.kernel_size = 3 
-                    opt.norm = 'none'
-                    opt.dropout = 0.1
-                    self.eval_wrapper = EvaluatorModelWrapperSALAD(opt, self.args.evaluator_train)
-                else:
-                    self.eval_wrapper = EvaluatorMDMWrapper(self.args.dataset_name, torch.device('cuda'), self.args, self.args.evaluator_train)
-            else:
+            if self.args.evaluator_train_type =='gru':
                 print('=== args.evaluator_train is None, using default evaluator')
                 self.eval_wrapper = EvaluatorMDMWrapper(self.args.dataset_name, torch.device('cuda'), self.args, self.args.evaluator_train)
+            elif self.args.evaluator_train_type =='tmr':
+                pass
 
         # if self.args.unlock_motion_enc:
         #     self.optimizer_movement_enc = torch.optim.AdamW(self.eval_wrapper.movement_encoder.parameters(),
