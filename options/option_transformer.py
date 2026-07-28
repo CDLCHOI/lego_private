@@ -7,7 +7,7 @@ def get_args_parser():
     parser.add_argument('--evaluator_eval_type', type=str, default='gru', choices=['gru', 'tmr'])
     parser.add_argument('--evaluator_train_type', type=str, default='gru', choices=['gru', 'snapmogen', 'tmr'])
     parser.add_argument('--snapmogen_evaluator_train_type', type=str, default='gru', choices=['trans', 'gru'])
-    parser.add_argument('--evaluator_train_dim_pose', type=int, default=148, help='SnapMoGen evaluator motion encoder 的输入维度（148 或 292）')
+    parser.add_argument('--evaluator_train_dim_pose', type=int, default=None, choices=[148,292], help='SnapMoGen evaluator motion encoder 的输入维度（148 或 292）')
     parser.add_argument('--random_gt', action='store_true', default=False)
     parser.add_argument('--ablation_separate_update', action='store_true', default=False) # 高级loss只更新CLIP，MSE loss只更新MDM
     parser.add_argument('--train_sample_num', type=int, default=0)

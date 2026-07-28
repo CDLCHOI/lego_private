@@ -188,7 +188,7 @@ def evaluate_matching_score(eval_wrapper, motion_loaders, file):
                             m_lens=m_lens
                         )
                     else:
-                        if args.evaluator_train_type == 'tmr':
+                        if args.evaluator_eval_type == 'tmr':
                             # TMR evaluator 使用 raw text (captions) 编码文本
                             text_embeddings, motion_embeddings = eval_wrapper.get_co_embeddings(
                                 word_embs=word_embeddings,

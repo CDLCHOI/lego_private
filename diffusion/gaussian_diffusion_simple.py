@@ -219,7 +219,10 @@ class GaussianDiffusionSimple:
         for nb_iter in tqdm(range(1, self.args.total_iter+1), position=0, leave=True):
             batch = next(dataloader_iter)
             if self.args.dataset_name == 'snapmogen':
-                clip_text, gt_motion, real_length = batch
+                word_embeddings, pos_one_hots, clip_text, sent_len, gt_motion, real_length, txt_tokens = batch
+                word_embeddings = word_embeddings.float().cuda()
+                pos_one_hots = pos_one_hots.float().cuda()
+                sent_len = sent_len.cuda()
             else:
                 word_embeddings, pos_one_hots, clip_text, sent_len, gt_motion, real_length, txt_tokens, traj, traj_mask_263, traj_mask, filename = batch
                 word_embeddings = word_embeddings.float().cuda()
@@ -276,7 +279,8 @@ class GaussianDiffusionSimple:
                 raise NotImplementedError
 
             if self.args.dataset_name == 'snapmogen':
-                loss, msg = self._calc_mdm_loss_snapmogen(x0, pred_x0, real_length, real_mask, nb_iter, clip_text)
+                loss, msg = self._calc_mdm_loss_snapmogen(x0, pred_x0, real_length, real_mask, nb_iter,
+                                                           word_embeddings, pos_one_hots, sent_len, clip_text)
             else:
                 loss, msg = self._calc_mdm_loss(x0, pred_x0, real_length, real_mask, nb_iter, word_embeddings, pos_one_hots, sent_len, optimizer, scheduler, optimizer_clip=optimizer_clip, clip_text=clip_text)
             
@@ -428,9 +432,8 @@ class GaussianDiffusionSimple:
             from models.snapmogen_evaluator import EvaluatorWrapper
             from utils.config_utils import load_config
 
-            # 加载 SnapMoGen evaluator 配置
+            # 加载 SnapMoGen evaluator 配置（评估时使用官方默认的 dim_pose=148，不覆盖）
             eval_cfg = load_config('./SnapMoGen/checkpoint_dir/snapmogen/evaluator/eval_klde-5_late-5_nlayer6_norm/evaluator.yaml')
-            eval_cfg.data.dim_pose = self.args.evaluator_train_dim_pose
             eval_cfg.data.root_dir = '/data/motion/SnapMoGen'
             eval_cfg.exp.root_ckpt_dir = './SnapMoGen/checkpoint_dir'
             eval_wrapper = EvaluatorWrapper(eval_cfg, device=torch.device('cuda'))
@@ -497,7 +500,8 @@ class GaussianDiffusionSimple:
         # self.writer.add_scalar('Metric/Skating_Ratio', skating_ratio, nb_iter)
         return FID, R_prec_top3
 
-    def _calc_mdm_loss_snapmogen(self, gt, pred, real_length, real_mask, iter, clip_text):
+    def _calc_mdm_loss_snapmogen(self, gt, pred, real_length, real_mask, iter,
+                                  word_embeddings, pos_one_hots, sent_len, clip_text):
         loss = 0
         B, L, dim = gt.shape
         msg = f' Train. Iter {iter} '
@@ -524,10 +528,12 @@ class GaussianDiffusionSimple:
                 with torch.enable_grad():
                     _, pred_emb, _ = self.eval_wrapper.encode_motion(pred[..., :eval_dim], real_length, sample_mean=False)
             else:
-                raise RuntimeError(
-                    'text_cos_loss 需要 T5 evaluator，但当前使用的是 GRU evaluator。'
-                    '请添加 --snapmogen_evaluator_train_type trans 来使用 T5 evaluator，'
-                    '或者去掉 --text_cos_loss 参数。'
+                # GRU evaluator: 通过 word_embeddings/pos_one_hots 计算 text_cos_loss
+                text_emb, pred_emb = self.eval_wrapper.get_co_embeddings_with_grad(
+                    word_embeddings, pos_one_hots, sent_len, pred[..., :eval_dim], real_length
+                )
+                _, gt_emb = self.eval_wrapper.get_co_embeddings_with_grad(
+                    word_embeddings, pos_one_hots, sent_len, gt[..., :eval_dim], real_length
                 )
 
             text_cos_loss = 1 - F.cosine_similarity(text_emb, pred_emb, dim=-1).mean()

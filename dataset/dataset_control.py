@@ -535,8 +535,21 @@ def DataLoader(batch_size, args, shuffle=False, mode='train', split='train', num
         std = np.load(pjoin(meta_dir, 'std.npy'))
 
         # 使用本地 SnapMoGen 的 TextMotionDataset
-        dataset = TextMotionDataset(cfg, mean, std, mid_split_file, cid_split_file, all_caption_path)
-        train_loader = torch.utils.data.DataLoader(dataset, batch_size, collate_fn=None, shuffle=shuffle, num_workers=num_workers, drop_last=drop_last)
+        if mode == 'train':
+            # 训练模式：启用文本向量化，返回 word_embeddings/pos_one_hots
+            #          用 collate_fn 按文本长度降序排序，满足 pack_padded_sequence 要求
+            w_vectorizer = WordVectorizer('./glove', 'our_vab')
+            opt = get_opt('./dataset/humanml_opt.txt', None)
+            dataset = TextMotionDataset(cfg, mean, std, mid_split_file, cid_split_file,
+                                        all_caption_path, w_vectorizer=w_vectorizer, opt=opt)
+            train_loader = torch.utils.data.DataLoader(dataset, batch_size, collate_fn=collate_fn,
+                                                       shuffle=shuffle, num_workers=num_workers, drop_last=drop_last)
+        else:
+            # 评估模式：基础模式（3 个返回值），向后兼容，无需 collate_fn 排序
+            dataset = TextMotionDataset(cfg, mean, std, mid_split_file, cid_split_file,
+                                        all_caption_path)
+            train_loader = torch.utils.data.DataLoader(dataset, batch_size, collate_fn=None,
+                                                       shuffle=shuffle, num_workers=num_workers, drop_last=drop_last)
         return train_loader
 
     if args.dataset_name == 't2m':
