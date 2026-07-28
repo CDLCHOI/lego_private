@@ -152,13 +152,29 @@ class GaussianDiffusionSimple:
         elif self.args.dataset_name == 'snapmogen':
             self.n_joints = 24
             # SnapMoGen 使用其数据集目录下的 mean.npy 和 std.npy
-            snapmogen_mean = np.load('/data/motion/SnapMoGen/meta_data/mean.npy')
-            snapmogen_std = np.load('/data/motion/SnapMoGen/meta_data/std.npy')
+            if getattr(self.args, 'correct_snapmogen_norm', False):
+                snapmogen_mean = np.load('./dataset/snapmogen_norm/mean.npy')
+                snapmogen_std = np.load('./dataset/snapmogen_norm/std.npy')
+                print('[SnapMoGen] Using corrected mean/std for diffusion')
+            else:
+                snapmogen_mean = np.load('/data/motion/SnapMoGen/meta_data/mean.npy')
+                snapmogen_std = np.load('/data/motion/SnapMoGen/meta_data/std.npy')
             self.mean = torch.from_numpy(snapmogen_mean).cuda()[None, None, ...].float()
             self.std = torch.from_numpy(snapmogen_std).cuda()[None, None, ...].float()
             # SnapMoGen 的 raw_mean 和 raw_std 暂时使用默认值
             self.raw_mean = torch.zeros(1, 1, 24, 3).cuda()
             self.raw_std = torch.ones(1, 1, 24, 3).cuda()
+            # 当使用正确的 mean/std 训练时，同时加载官方 mean/std，
+            # 用于将 motion 转换到 evaluator 期望的归一化空间
+            if getattr(self.args, 'correct_snapmogen_norm', False):
+                official_mean = np.load('/data/motion/SnapMoGen/meta_data/mean.npy')
+                official_std = np.load('/data/motion/SnapMoGen/meta_data/std.npy')
+                self.official_mean = torch.from_numpy(official_mean).cuda()[None, None, ...].float()
+                self.official_std = torch.from_numpy(official_std).cuda()[None, None, ...].float()
+                print('[SnapMoGen] Loaded official mean/std for evaluator space conversion')
+            else:
+                self.official_mean = None
+                self.official_std = None
 
         
 
@@ -243,6 +259,26 @@ class GaussianDiffusionSimple:
         self.sample_list = []
         self.time_list = []
 
+
+    def _convert_to_official_norm(self, motion):
+        """将 motion 从正确的归一化空间转换到官方归一化空间（evaluator 期望的空间）
+
+        正确空间: (raw - correct_mean) / correct_std
+        官方空间: (raw - official_mean) / official_std
+        转换公式: official = (correct * correct_std + correct_mean - official_mean) / official_std
+
+        Args:
+            motion: (B, L, D) 在正确归一化空间的 motion
+        Returns:
+            (B, L, D) 在官方归一化空间的 motion
+        """
+        if self.official_mean is None:
+            return motion
+        D = motion.shape[-1]
+        # 反归一化到原始空间
+        raw = motion * self.std[:, :, :D] + self.mean[:, :, :D]
+        # 用官方 mean/std 重新归一化
+        return (raw - self.official_mean[:, :, :D]) / self.official_std[:, :, :D]
 
     def trainer_func_mdm(self, dataloader_iter, logger, optimizer, scheduler, optimizer_clip=None):
         ''' 跑新idea的 不属于CMC '''
@@ -560,19 +596,24 @@ class GaussianDiffusionSimple:
             # GRU evaluator: dim_pose 包含 contacts 维度
             eval_dim = self.eval_wrapper.dim_pose
 
+        # 当使用正确的归一化参数训练时，需要将 pred/gt 从正确空间转换到
+        # 官方归一化空间，因为 evaluator 是在官方归一化数据上训练的
+        pred_for_eval = self._convert_to_official_norm(pred[..., :eval_dim])
+        gt_for_eval = self._convert_to_official_norm(gt[..., :eval_dim])
+
         if self.args.text_cos_loss:
             if is_t5_evaluator:
                 text_emb, _ = self.eval_wrapper.encode_text(clip_text, sample_mean=True)
                 text_emb = text_emb.to(gt.device)
                 with torch.enable_grad():
-                    _, pred_emb, _ = self.eval_wrapper.encode_motion(pred[..., :eval_dim], real_length, sample_mean=False)
+                    _, pred_emb, _ = self.eval_wrapper.encode_motion(pred_for_eval, real_length, sample_mean=False)
             else:
                 # GRU evaluator: 通过 word_embeddings/pos_one_hots 计算 text_cos_loss
                 text_emb, pred_emb = self.eval_wrapper.get_co_embeddings_with_grad(
-                    word_embeddings, pos_one_hots, sent_len, pred[..., :eval_dim], real_length
+                    word_embeddings, pos_one_hots, sent_len, pred_for_eval, real_length
                 )
                 _, gt_emb = self.eval_wrapper.get_co_embeddings_with_grad(
-                    word_embeddings, pos_one_hots, sent_len, gt[..., :eval_dim], real_length
+                    word_embeddings, pos_one_hots, sent_len, gt_for_eval, real_length
                 )
 
             text_cos_loss = 1 - F.cosine_similarity(text_emb, pred_emb, dim=-1).mean()
@@ -582,16 +623,16 @@ class GaussianDiffusionSimple:
 
         if self.args.cos_loss:
             if is_t5_evaluator:
-                _, gt_emb, _ = self.eval_wrapper.encode_motion(gt[..., :eval_dim], real_length, sample_mean=False)
+                _, gt_emb, _ = self.eval_wrapper.encode_motion(gt_for_eval, real_length, sample_mean=False)
                 with torch.enable_grad():
-                    _, pred_emb, _ = self.eval_wrapper.encode_motion(pred[..., :eval_dim], real_length, sample_mean=False)
+                    _, pred_emb, _ = self.eval_wrapper.encode_motion(pred_for_eval, real_length, sample_mean=False)
             else:
                 # GRU evaluator: gt 无需梯度，pred 需要梯度
                 gt_emb = self.eval_wrapper.get_motion_embeddings(
-                    gt[..., :eval_dim], real_length
+                    gt_for_eval, real_length
                 )
                 pred_emb = self.eval_wrapper.get_motion_embeddings_with_grad(
-                    pred[..., :eval_dim], real_length
+                    pred_for_eval, real_length
                 )
 
             # 计算余弦相似度损失

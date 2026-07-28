@@ -531,8 +531,20 @@ def DataLoader(batch_size, args, shuffle=False, mode='train', split='train', num
             cid_split_file = pjoin(data_split_dir, 'test_ids.txt')
 
         # 加载均值和标准差
-        mean = np.load(pjoin(meta_dir, 'mean.npy'))
-        std = np.load(pjoin(meta_dir, 'std.npy'))
+        # GT 数据始终使用官方 mean/std，因为 evaluator 是在官方归一化数据上训练的
+        # 训练数据：correct_snapmogen_norm=True 时使用修正后的 mean/std
+        if mode == 'gt':
+            mean = np.load(pjoin(meta_dir, 'mean.npy'))
+            std = np.load(pjoin(meta_dir, 'std.npy'))
+            print('[SnapMoGen] GT mode: using official mean/std from', meta_dir)
+        elif getattr(args, 'correct_snapmogen_norm', False):
+            norm_dir = './dataset/snapmogen_norm'
+            mean = np.load(pjoin(norm_dir, 'mean.npy'))
+            std = np.load(pjoin(norm_dir, 'std.npy'))
+            print('[SnapMoGen] Using corrected mean/std from', norm_dir)
+        else:
+            mean = np.load(pjoin(meta_dir, 'mean.npy'))
+            std = np.load(pjoin(meta_dir, 'std.npy'))
 
         # 使用本地 SnapMoGen 的 TextMotionDataset
         if mode == 'train':

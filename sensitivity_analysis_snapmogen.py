@@ -586,7 +586,7 @@ def test(clip_version, batch_size, max_samples):
     plot_3d_similarity_histogram(sim_array, save_path=f"sensitivity_histogram_3d_{args.max_samples}_{'test' if args.only_test_set else 'all'}.png")
 
     # 绘制按文本长度统计的平均相似度折线图
-    plot_similarity_by_text_length(sim_array, paired_texts, save_path=f"sensitivity_similarity_by_text_length_{args.max_samples}_{'test' if args.only_test_set else 'all'}.pdf")
+    plot_similarity_by_text_length(sim_array, paired_texts, save_path=f"sensitivity_similarity_by_text_length_{args.max_samples}_{'test' if args.only_test_set else 'all'}_snapmogen.pdf")
 
 
 if __name__ == "__main__":

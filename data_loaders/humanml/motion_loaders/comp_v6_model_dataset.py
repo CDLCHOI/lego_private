@@ -209,6 +209,11 @@ class CompSnapMoGen(Dataset):
                     else:
                         sample = diffusion.p_sample_loop(partial_emb, with_control=True, model_kwargs=model_kwargs, batch_size=100) # (b, 196, 263)
 
+                # 当使用正确的归一化参数训练时，将采样结果从正确空间转换到
+                # 官方归一化空间，因为 evaluator 是在官方归一化数据上训练的
+                if self.args.correct_snapmogen_norm:
+                    sample = diffusion._convert_to_official_norm(sample)
+
                 # vis_motion(motion1=sample[0], motion2=gt_motion[0], save_path='visualization/1.html', vis=True)
 
                 if t == 0:

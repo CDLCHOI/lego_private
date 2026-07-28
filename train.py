@@ -134,7 +134,11 @@ if __name__ == '__main__':
     else:
         shuffle=True 
 
-    train_loader = dataset_control.DataLoader(batch_size=args.batch_size, args=args, mode=args.mode, diffusion=diffusion, shuffle=shuffle)
+    if args.dataset_name == 'snapmogen':
+        logger.info(f'=== Using val set to train, only for debug ===')
+        train_loader = dataset_control.DataLoader(batch_size=args.batch_size, args=args, mode=args.mode, diffusion=diffusion, shuffle=shuffle, split='val')
+    else:
+        train_loader = dataset_control.DataLoader(batch_size=args.batch_size, args=args, mode=args.mode, diffusion=diffusion, shuffle=shuffle)
     train_loader_iter = dataset_control.cycle(train_loader)
 
     val_batch = 100 if args.dataset_name == 'snapmogen' else 32
