@@ -16,6 +16,9 @@ class ClassifierFreeSampleModel(nn.Module):
         assert self.model.cond_mask_prob > 0, 'Cannot run a guided diffusion on a model that has not been trained with no conditions'
 
     def forward(self, x, timesteps, y=None):
+        if self.scale == 1:
+            return self.model(x, timesteps, y)
+
         B = x.shape[0]
         cond_mode = self.model.cond_mode
         # assert cond_mode in ['only_text', 'only_spatial', 'both_text_spatial','text']
@@ -38,6 +41,9 @@ class CFG_SALAD(nn.Module):
         assert self.model.cond_mask_prob > 0, 'Cannot run a guided diffusion on a model that has not been trained with no conditions'
 
     def forward(self, x, timesteps, y=None):
+        if self.scale == 1:
+            return self.model(x, timesteps, y['text'])
+
         B = x.shape[0]
         none_text = [""] * B
 

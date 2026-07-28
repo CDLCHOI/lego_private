@@ -115,7 +115,7 @@ if __name__ == '__main__':
         load_ckpt(net, args.resume_trans, key=None, strict=False, filter=True)
     except:
         logger.info(f'load_ckpt(): key=model')
-        load_ckpt(net, args.resume_trans, key='model', strict=False, filter=True) # 读郭岭的MDMdec用
+        load_ckpt(net, args.resume_trans, key='base', strict=False, filter=True) # 读郭岭的MDMdec用
     # except:
     #     logger.info(f'load_lora_ckpt():')
     #     load_lora_ckpt(net, args.resume_trans)

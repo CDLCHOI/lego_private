@@ -47,7 +47,8 @@ class GaussianDiffusionSimple:
                 from utils.config_utils import load_config
                 # 加载 SnapMoGen evaluator 配置，dim_pose 通过 args.evaluator_train_dim_pose 控制（148 或 292）
                 eval_cfg = load_config('./SnapMoGen/checkpoint_dir/snapmogen/evaluator/eval_klde-5_late-5_nlayer6_norm/evaluator.yaml')
-                eval_cfg.data.dim_pose = self.args.evaluator_train_dim_pose
+                if self.args.evaluator_train_dim_pose is not None:
+                    eval_cfg.data.dim_pose = self.args.evaluator_train_dim_pose
                 eval_model_path = self.args.evaluator_train
                 if eval_model_path is None:
                     eval_model_path = './SnapMoGen/checkpoint_dir/snapmogen/evaluator/eval_klde-5_late-5_nlayer6_norm/model/net_best_top1.tar'
@@ -390,7 +391,7 @@ class GaussianDiffusionSimple:
 
 
     def _eval_and_save(self, nb_iter, logger):
-        if nb_iter % self.args.save_iter == 0:
+        if nb_iter % self.args.save_iter == 0 or (nb_iter < 44444 and nb_iter % 10000 == 0):
             if self.args.eval_during_train:
                 fid, Rprec = self._eval_during_train(nb_iter)
                 diff = Rprec-fid
