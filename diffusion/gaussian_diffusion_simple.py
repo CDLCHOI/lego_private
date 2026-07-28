@@ -41,7 +41,7 @@ class GaussianDiffusionSimple:
 
         # 训练用的评估器
         if self.args.dataset_name == 'snapmogen':
-            if args.snapmogen_evaluator_train_type == 'trans':
+            if args.evaluator_train_type == 'snapmogen':
                 # 使用 SnapMoGen 的 evaluator（本地模块）
                 from models.snapmogen_evaluator import EvaluatorWrapper
                 from utils.config_utils import load_config
@@ -53,13 +53,48 @@ class GaussianDiffusionSimple:
                     eval_model_path = './SnapMoGen/checkpoint_dir/snapmogen/evaluator/eval_klde-5_late-5_nlayer6_norm/model/net_best_top1.tar'
                 self.eval_wrapper = EvaluatorWrapper(eval_cfg, device=torch.device('cuda'), model_path=eval_model_path)
                 self.eval_wrapper.eval()
-            elif args.snapmogen_evaluator_train_type == 'gru':
+            elif args.evaluator_train_type == 'gru':
                 if self.args.evaluator_train is not None:
-                    print('=== using GRU evaluator train for SnapMoGen ===')
-                    self.eval_wrapper = EvaluatorMDMWrapper(self.args.dataset_name, torch.device('cuda'), self.args, self.args.evaluator_train)
-                    # EvaluatorMDMWrapper 已在 __init__ 中设置好各 encoder 的 train/eval 状态，无需额外调用 .eval()
+                    # 自动检测 checkpoint 格式：兼容 GRU 老格式 (movement_encoder)
+                    # 和 SnapMoGen 新格式 (latent_enc)
+                    ckpt_peek = torch.load(self.args.evaluator_train, map_location='cpu', weights_only=True)
+                    if 'movement_encoder' in ckpt_peek:
+                        # 老格式：GRU evaluator（EvaluatorMDMWrapper）
+                        print('=== using GRU evaluator train for SnapMoGen ===')
+                        self.eval_wrapper = EvaluatorMDMWrapper(self.args.dataset_name, torch.device('cuda'), self.args, self.args.evaluator_train)
+                        # EvaluatorMDMWrapper 已在 __init__ 中设置好各 encoder 的 train/eval 状态，无需额外调用 .eval()
+                    elif 'latent_enc' in ckpt_peek:
+                        # 新格式：SnapMoGen evaluator，自动切换到 trans 路径
+                        print('=== Auto-detected SnapMoGen checkpoint format, using trans evaluator ===')
+                        from models.snapmogen_evaluator import EvaluatorWrapper
+                        from utils.config_utils import load_config
+                        # 从模型路径推导 config 路径
+                        # 模型路径: .../evaluator/<exp_name>/model/net_best_top1.tar
+                        # config 路径: .../evaluator/<exp_name>/evaluator.yaml
+                        eval_model_path = self.args.evaluator_train
+                        eval_exp_dir = os.path.dirname(os.path.dirname(eval_model_path))
+                        eval_cfg_path = os.path.join(eval_exp_dir, 'evaluator.yaml')
+                        if not os.path.exists(eval_cfg_path):
+                            # 回退到默认 config 路径
+                            eval_cfg_path = './SnapMoGen/checkpoint_dir/snapmogen/evaluator/eval_klde-5_late-5_nlayer6_norm/evaluator.yaml'
+                        eval_cfg = load_config(eval_cfg_path)
+                        # 只有当用户显式指定 dim_pose 时才覆盖配置文件中的默认值
+                        if self.args.evaluator_train_dim_pose is not None:
+                            eval_cfg.data.dim_pose = self.args.evaluator_train_dim_pose
+                        self.eval_wrapper = EvaluatorWrapper(eval_cfg, device=torch.device('cuda'), model_path=eval_model_path)
+                        self.eval_wrapper.eval()
+                    else:
+                        raise KeyError(
+                            f"Unknown checkpoint format in {self.args.evaluator_train}. "
+                            f"Expected 'movement_encoder' (GRU format) or 'latent_enc' (SnapMoGen format). "
+                            f"Found keys: {list(ckpt_peek.keys())}. "
+                            f"Please check --snapmogen_evaluator_train_type or --evaluator_train."
+                        )
                 else:
                     print('=== evaluator will not be used during training ===')
+                    self.eval_wrapper = None
+            else:
+                raise ValueError(f"Unsupported evaluator_train_type: {args.evaluator_train_type}.")
             
             
         else:
@@ -506,6 +541,16 @@ class GaussianDiffusionSimple:
         B, L, dim = gt.shape
         msg = f' Train. Iter {iter} '
 
+        # 1. 运动重建损失 (MSE)
+        motion_real_mask = real_mask[..., None].repeat(1, 1, dim)
+        motion_loss = F.mse_loss(pred[motion_real_mask], gt[motion_real_mask])
+        msg += f" motion_loss. {motion_loss:.5f}"
+        self.writer.add_scalar('Loss/motion_loss', motion_loss.item(), iter)
+        loss += motion_loss
+
+        if self.eval_wrapper is None:
+            return loss, msg
+
         # 判断 evaluator 类型：T5 (有 latent_enc) vs GRU (EvaluatorMDMWrapper)
         is_t5_evaluator = hasattr(self.eval_wrapper, 'latent_enc')
         if is_t5_evaluator:
@@ -513,13 +558,6 @@ class GaussianDiffusionSimple:
         else:
             # GRU evaluator: dim_pose 包含 contacts 维度
             eval_dim = self.eval_wrapper.dim_pose
-
-        # 1. 运动重建损失 (MSE)
-        motion_real_mask = real_mask[..., None].repeat(1, 1, dim)
-        motion_loss = F.mse_loss(pred[motion_real_mask], gt[motion_real_mask])
-        msg += f" motion_loss. {motion_loss:.5f}"
-        self.writer.add_scalar('Loss/motion_loss', motion_loss.item(), iter)
-        loss += motion_loss
 
         if self.args.text_cos_loss:
             if is_t5_evaluator:
