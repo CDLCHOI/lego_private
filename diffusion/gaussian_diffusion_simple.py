@@ -294,7 +294,7 @@ class GaussianDiffusionSimple:
         self.best_Rprec = 0
         self.best_diff = 0 # Rprec-FID的差值
         if self.args.init_eval:
-            FID, R_prec_top3 = self._eval_during_train(0)
+            FID, R_prec_top3 = self._eval_during_train(0, logger)
             return
         for nb_iter in tqdm(range(1, self.args.total_iter+1), position=0, leave=True):
             batch = next(dataloader_iter)
@@ -379,35 +379,7 @@ class GaussianDiffusionSimple:
 
             # self._save('test_lora.pth'); print(' debug =='*50)
             self._eval_and_save(nb_iter, logger)
-            # if nb_iter % self.args.save_iter == 0 or (nb_iter > self.args.total_iter-100000 and nb_iter % 5000 == 0):
-            #     if self.args.eval_during_train:
-            #         fid, Rprec = self._eval_during_train(nb_iter)
-            #         diff = Rprec-fid
-
-            #         state_dict = self.model.state_dict()
-            #         # 去掉text encoder的key
-            #         clip_weights = [e for e in state_dict.keys() if e.startswith('clip_model.')]
-            #         for e in clip_weights:
-            #             del state_dict[e]
-
-            #         if diff > best_diff:  
-            #             best_diff = diff   
-            #             torch.save(state_dict, pjoin(self.args.out_dir, 'net_best_diff.pth'))
-            #             logger.info(f' save net_best_diff.pth') 
-
-
-
-            #         if fid < best_fid:  
-            #             best_fid = fid   
-            #             torch.save(state_dict, pjoin(self.args.out_dir, 'net_best.pth'))
-            #             logger.info(f' save net_best.pth') 
-            #         if Rprec > best_Rprec:  
-            #             best_Rprec = Rprec   
-            #             logger.info(f' save net_bestR.pth') 
-            #         logger.info(f'FID={fid}, best_FID={best_fid}')
-            #         logger.info(f'diff={diff}, best_diff={best_diff}')
-            #     logger.info('save net_last.pth')
-            #     torch.save(state_dict, pjoin(self.args.out_dir, 'net_last.pth'))
+            
 
     def _backward_and_step_ablation_separate_update(self, motion_loss, cos_loss, text_cos_loss, optimizer, scheduler, optimizer_clip):
         optimizer.zero_grad()
@@ -437,7 +409,7 @@ class GaussianDiffusionSimple:
     def _eval_and_save(self, nb_iter, logger):
         if nb_iter % self.args.save_iter == 0 or (nb_iter < 44444 and nb_iter % 10000 == 0):
             if self.args.eval_during_train:
-                fid, Rprec = self._eval_during_train(nb_iter)
+                fid, Rprec = self._eval_during_train(nb_iter, logger)
                 diff = Rprec-fid
 
                 # state_dict = self.model.state_dict()
@@ -487,7 +459,7 @@ class GaussianDiffusionSimple:
             torch.save(self.model.state_dict(), ckpt_path)
         print(f'Save ckpt to {ckpt_path}')
 
-    def _eval_during_train(self, nb_iter):
+    def _eval_during_train(self, nb_iter, logger):
 
         from eval_cmc import evaluation
         # 重新固定随机种子，确保测试过程的随机性可控
@@ -508,17 +480,24 @@ class GaussianDiffusionSimple:
         
         # 根据数据集类型选择 evaluator
         if self.args.dataset_name == 'snapmogen':
-            # 使用 SnapMoGen 的 evaluator（本地模块）
-            from models.snapmogen_evaluator import EvaluatorWrapper
-            from utils.config_utils import load_config
-
-            # 加载 SnapMoGen evaluator 配置（评估时使用官方默认的 dim_pose=148，不覆盖）
-            eval_cfg = load_config('./SnapMoGen/checkpoint_dir/snapmogen/evaluator/eval_klde-5_late-5_nlayer6_norm/evaluator.yaml')
-            eval_cfg.data.root_dir = '/data/motion/SnapMoGen'
-            eval_cfg.exp.root_ckpt_dir = './SnapMoGen/checkpoint_dir'
-            eval_wrapper = EvaluatorWrapper(eval_cfg, device=torch.device('cuda'))
-            eval_wrapper.text_enc.eval()
-            eval_wrapper.latent_enc.eval()
+            if self.args.evaluator_eval_type == 'snapmogen':
+                logger.info('=== Loading Official evaluator for SnapMoGen Evaluation ===')
+                
+                from models.snapmogen_evaluator import EvaluatorWrapper
+                from utils.config_utils import load_config
+                # 加载 SnapMoGen evaluator 配置（评估时使用官方默认的 dim_pose=148，不覆盖）
+                eval_cfg = load_config('./SnapMoGen/checkpoint_dir/snapmogen/evaluator/eval_klde-5_late-5_nlayer6_norm/evaluator.yaml')
+                eval_cfg.data.root_dir = '/data/motion/SnapMoGen'
+                eval_cfg.exp.root_ckpt_dir = './SnapMoGen/checkpoint_dir'
+                eval_wrapper = EvaluatorWrapper(eval_cfg, device=torch.device('cuda'))
+                eval_wrapper.text_enc.eval()
+                eval_wrapper.latent_enc.eval()
+            elif self.args.evaluator_eval_type == 'gru':
+                logger.info('=== Loading GRU evaluator for SnapMoGen Evaluation ===')
+                eval_wrapper = EvaluatorMDMWrapper(self.args.dataset_name, torch.device('cuda'), self.args, self.args.evaluator_eval)
+                eval_wrapper.text_encoder.eval()
+                eval_wrapper.motion_encoder.eval()
+                eval_wrapper.movement_encoder.eval()
 
         else:
             if self.args.evaluator_eval_type == 'tmr':

@@ -168,6 +168,7 @@ def evaluate_matching_score(eval_wrapper, motion_loaders, file):
                     motions = motions.float().cuda()[...,:148]
                     text_embeddings, _ = eval_wrapper.encode_text(caption, sample_mean=True)
                     _, motion_embeddings, _ = eval_wrapper.encode_motion(motions, m_lens, sample_mean=True)
+
                 else:
                     if len(batch) == 7:
                         word_embeddings, pos_one_hots, caption, sent_lens, motions, m_lens, _ = batch
@@ -416,11 +417,11 @@ def evaluation(eval_wrapper, gt_loader, eval_motion_loaders, log_file, replicati
                         ds_mean = dataset_obj.dataset.mean
                         ds_std = dataset_obj.dataset.std
                         vis_motion_data = {
-                            'motion': motions[0].copy(),       # (L, 296)
+                            'motion': motions[0].cpu().numpy(),       # (L, 296)
                             'm_length': int(m_lens[0]),
                             'caption': str(caption[0]),
-                            'mean': ds_mean.copy(),
-                            'std': ds_std.copy(),
+                            'mean': np.array(ds_mean),
+                            'std': np.array(ds_std),
                         }
                     except Exception as e:
                         print(f'[WARNING] 获取可视化 motion 失败: {e}')

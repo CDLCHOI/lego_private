@@ -4,7 +4,9 @@ def get_args_parser():
     parser = argparse.ArgumentParser(description='Optimal Transport AutoEncoder training for Amass',
                                      add_help=True,
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--evaluator_eval_type', type=str, default='gru', choices=['gru', 'tmr'])
+    
+    parser.add_argument('--train_with_test_set', action='store_true', default=False)
+    parser.add_argument('--evaluator_eval_type', type=str, default='gru', choices=['gru', 'snapmogen', 'tmr'])
     parser.add_argument('--evaluator_train_type', type=str, default='gru', choices=['gru', 'snapmogen', 'tmr'])
     parser.add_argument('--evaluator_train_dim_pose', type=int, default=None, choices=[148,292], help='SnapMoGen evaluator motion encoder 的输入维度（148 或 292）')
     parser.add_argument('--correct_snapmogen_norm', action='store_true', default=False, help='使用从训练集重新计算的 mean/std（dataset/snapmogen_norm/）替代官方预置的错误归一化参数')

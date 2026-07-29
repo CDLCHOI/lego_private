@@ -97,6 +97,7 @@ class TextMotionDataset(CommonMotionDataset):
 
         self.w_vectorizer = w_vectorizer
         self.opt = opt
+        self.max_text_len = 77  # 与 CLIP tokenizer context_length=77 对齐
 
         if w_vectorizer is not None:
             import spacy
@@ -149,13 +150,13 @@ class TextMotionDataset(CommonMotionDataset):
                 else:
                     tokens.append(word + '/' + token.pos_)
 
-            # 截断/填充到 opt.max_text_len + 2（sos + eos）
-            if len(tokens) < self.opt.max_text_len:
+            # 截断/填充到 max_text_len + 2（sos + eos）
+            if len(tokens) < self.max_text_len:
                 tokens = ['sos/OTHER'] + tokens + ['eos/OTHER']
                 sent_len = len(tokens)
-                tokens = tokens + ['unk/OTHER'] * (self.opt.max_text_len + 2 - sent_len)
+                tokens = tokens + ['unk/OTHER'] * (self.max_text_len + 2 - sent_len)
             else:
-                tokens = tokens[:self.opt.max_text_len]
+                tokens = tokens[:self.max_text_len]
                 tokens = ['sos/OTHER'] + tokens + ['eos/OTHER']
                 sent_len = len(tokens)
 

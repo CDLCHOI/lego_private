@@ -134,7 +134,13 @@ if __name__ == '__main__':
     else:
         shuffle=True 
 
-    train_loader = dataset_control.DataLoader(batch_size=args.batch_size, args=args, mode=args.mode, diffusion=diffusion, shuffle=shuffle)
+    train_split = 'train'
+    if args.train_with_test_set:
+        train_split = 'test'
+        logger.info('=== Using val set to train, only for debug ===')
+        logger.info('=== Using val set to train, only for debug ===')
+        logger.info('=== Using val set to train, only for debug ===')
+    train_loader = dataset_control.DataLoader(batch_size=args.batch_size, args=args, mode=args.mode, diffusion=diffusion, shuffle=shuffle, split=train_split)
     train_loader_iter = dataset_control.cycle(train_loader)
 
     val_batch = 100 if args.dataset_name == 'snapmogen' else 32
