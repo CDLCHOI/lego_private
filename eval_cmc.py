@@ -163,11 +163,22 @@ def evaluate_matching_score(eval_wrapper, motion_loaders, file):
         with torch.no_grad():
             for idx, batch in enumerate(motion_loader):
                 if args.dataset_name == 'snapmogen':
-                    # SnapMoGen T5 evaluator
-                    caption, motions, m_lens = batch
-                    motions = motions.float().cuda()[...,:148]
-                    text_embeddings, _ = eval_wrapper.encode_text(caption, sample_mean=True)
-                    _, motion_embeddings, _ = eval_wrapper.encode_motion(motions, m_lens, sample_mean=True)
+                    # SnapMoGen GT/vald 统一：7 元组
+                    word_embeddings, pos_one_hots, caption, sent_lens, motions, m_lens, _ = batch
+                    motions = motions.float().cuda()
+                    if args.evaluator_eval_type == 'gru':
+                        text_embeddings, motion_embeddings = eval_wrapper.get_co_embeddings(
+                            word_embs=word_embeddings,
+                            pos_ohot=pos_one_hots,
+                            cap_lens=sent_lens,
+                            motions=motions[:148],
+                            m_lens=m_lens
+                        )
+                    else:
+                        # T5/TMR evaluator 路径（保留原有逻辑）
+                        motions = motions[...,:148]
+                        text_embeddings, _ = eval_wrapper.encode_text(caption, sample_mean=True)
+                        _, motion_embeddings, _ = eval_wrapper.encode_motion(motions, m_lens, sample_mean=True)
 
                 else:
                     if len(batch) == 7:
@@ -309,9 +320,17 @@ def evaluate_fid(eval_wrapper, groundtruth_loader, activation_dict, file):
     with torch.no_grad():
         for idx, batch in enumerate(groundtruth_loader):
             if args.dataset_name == 'snapmogen':
-                caption, motions, m_lens = batch
-                motions = motions.float().cuda()[...,:148]
-                _, motion_embeddings, _ = eval_wrapper.encode_motion(motions, m_lens, sample_mean=False)
+                # SnapMoGen GT 数据：7 元组
+                _, _, _, _, motions, m_lens, _ = batch
+                motions = motions.float().cuda()
+                if args.evaluator_eval_type == 'gru':
+                    motion_embeddings = eval_wrapper.get_motion_embeddings(
+                        motions=motions,
+                        m_lens=m_lens
+                    )
+                else:
+                    motions = motions[...,:148]
+                    _, motion_embeddings, _ = eval_wrapper.encode_motion(motions, m_lens, sample_mean=False)
             else:
                 word_embeddings, pos_one_hots, _, sent_lens, motions, m_lens, _, _, _, _, filename= batch
                 if eval_wrapper.dim_pose < 100:
@@ -411,7 +430,9 @@ def evaluation(eval_wrapper, gt_loader, eval_motion_loaders, log_file, replicati
                 if vald_loader is not None:
                     try:
                         first_batch = next(iter(vald_loader))
-                        caption, motions, m_lens = first_batch
+                        # CompSnapMoGen vald loader 返回 7 元组
+                        # (word_embeddings, pos_one_hots, caption, sent_len, motion, m_length, tokens_str)
+                        _, _, caption, _, motions, m_lens, _ = first_batch
                         # 获取数据集 mean/std 用于后续反归一化
                         dataset_obj = vald_loader.dataset
                         ds_mean = dataset_obj.dataset.mean

@@ -162,6 +162,12 @@ class CompSnapMoGen(Dataset):
             real_num_batches = num_samples_limit // gen_loader.batch_size + 1
         print('real_num_batches', real_num_batches)
 
+        # 初始化文本向量化工具（用于 __getitem__ 中生成 word_embeddings/pos_one_hots）
+        from utils.word_vectorizer import WordVectorizer
+        import spacy
+        self.w_vectorizer = WordVectorizer('./glove', 'our_vab')
+        self.nlp = spacy.load('en_core_web_sm')
+        self.max_text_len = 77  # 与 CLIP tokenizer context_length=77 对齐
 
         generated_motion = []
         mm_generated_motions = []
@@ -171,20 +177,20 @@ class CompSnapMoGen(Dataset):
         else:
             mm_idxs = []
         print('mm_idxs = ', mm_idxs)
-        
+
         for i, batch in enumerate(self.gen_loader):
             # if i==10:
             #     break
             print(f'{i}/{real_num_batches}')
             if num_samples_limit is not None and len(generated_motion) >= num_samples_limit:
                 break
-            
+
             clip_text, gt_motion, real_length = batch
             b, max_length, num_features = gt_motion.shape
             gt_motion = gt_motion.cuda()
             real_length = real_length.cuda()
             real_mask = generate_src_mask(max_length, real_length) # (b,196)
-    
+
 
             model_kwargs = {}
             model_kwargs['real_mask'] = real_mask
@@ -192,11 +198,11 @@ class CompSnapMoGen(Dataset):
 
 
 
-            is_mm = i in mm_idxs 
+            is_mm = i in mm_idxs
             repeat_times = mm_num_repeats if is_mm else 1
             mm_motions = []
 
-        
+
             for t in range(repeat_times):
                 if self.args.test_gt_metric:
                     sample = gt_motion
@@ -223,31 +229,65 @@ class CompSnapMoGen(Dataset):
                                 } for bs_i in range(gen_loader.batch_size)]
 
                     generated_motion += sub_dicts
-                    
+
                 if is_mm:
                     mm_motions += [{'motion': sample[bs_i].squeeze().cpu().numpy(),
                                     'length': real_length[bs_i].cpu().numpy(),
                                     } for bs_i in range(gen_loader.batch_size)]
 
-            
+
             if is_mm:
                 mm_generated_motions += [{
                                 'caption': clip_text[bs_i],
-                                'mm_motions': mm_motions[bs_i::gen_loader.batch_size], 
+                                'mm_motions': mm_motions[bs_i::gen_loader.batch_size],
                                 } for bs_i in range(gen_loader.batch_size)]
             a = 1
 
         print('last sample.sum()=', sample.sum())
-        
+
         self.generated_motion = generated_motion
         self.mm_generated_motion = mm_generated_motions
 
 
     def __len__(self):
         return len(self.generated_motion)
-    
+
     def __getitem__(self, item):
         data = self.generated_motion[item]
-        motion, m_length, caption= data['motion'], data['length'], data['caption']
-        return caption, motion, m_length
+        motion, m_length, caption = data['motion'], data['length'], data['caption']
+
+        # ── 文本向量化（参照 dataset/snapmogen_dataset.py TextMotionDataset 的做法） ──
+        doc = self.nlp(caption)
+
+        tokens = []
+        for token in doc:
+            word = token.text
+            if not word.isalpha():
+                continue
+            if (token.pos_ == 'NOUN' or token.pos_ == 'VERB') and (word != 'left'):
+                tokens.append(token.lemma_ + '/' + token.pos_)
+            else:
+                tokens.append(word + '/' + token.pos_)
+
+        # 截断/填充到 max_text_len + 2（sos + eos）
+        if len(tokens) < self.max_text_len:
+            tokens = ['sos/OTHER'] + tokens + ['eos/OTHER']
+            sent_len = len(tokens)
+            tokens = tokens + ['unk/OTHER'] * (self.max_text_len + 2 - sent_len)
+        else:
+            tokens = tokens[:self.max_text_len]
+            tokens = ['sos/OTHER'] + tokens + ['eos/OTHER']
+            sent_len = len(tokens)
+
+        # 通过 w_vectorizer 转换为 word_embeddings 和 pos_one_hots
+        pos_one_hots = []
+        word_embeddings = []
+        for token in tokens:
+            word_emb, pos_oh = self.w_vectorizer[token]
+            pos_one_hots.append(pos_oh[None, :])
+            word_embeddings.append(word_emb[None, :])
+        pos_one_hots = np.concatenate(pos_one_hots, axis=0)
+        word_embeddings = np.concatenate(word_embeddings, axis=0)
+
+        return word_embeddings, pos_one_hots, caption, sent_len, motion, m_length, '_'.join(tokens)
     

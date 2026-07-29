@@ -565,8 +565,17 @@ def DataLoader(batch_size, args, shuffle=False, mode='train', split='train', num
                                         all_caption_path, w_vectorizer=w_vectorizer, opt=opt)
             train_loader = torch.utils.data.DataLoader(dataset, batch_size, collate_fn=collate_fn,
                                                        shuffle=shuffle, num_workers=num_workers, drop_last=drop_last)
+        elif mode == 'gt':
+            # GT 模式：启用文本向量化（供 GRU evaluator 使用 word_embeddings/pos_one_hots）
+            #         用 collate_fn 按文本长度降序排序，满足 GRU pack_padded_sequence 要求
+            w_vectorizer = WordVectorizer('./glove', 'our_vab')
+            opt = get_opt('./dataset/humanml_opt.txt', None)
+            dataset = TextMotionDataset(cfg, mean, std, mid_split_file, cid_split_file,
+                                        all_caption_path, w_vectorizer=w_vectorizer, opt=opt)
+            train_loader = torch.utils.data.DataLoader(dataset, batch_size, collate_fn=collate_fn,
+                                                       shuffle=shuffle, num_workers=num_workers, drop_last=drop_last)
         else:
-            # 评估模式：基础模式（3 个返回值），向后兼容，无需 collate_fn 排序
+            # 评估模式（eval）：基础模式（3 个返回值），向后兼容（gen_loader 训练采样用）
             dataset = TextMotionDataset(cfg, mean, std, mid_split_file, cid_split_file,
                                         all_caption_path)
             train_loader = torch.utils.data.DataLoader(dataset, batch_size, collate_fn=None,

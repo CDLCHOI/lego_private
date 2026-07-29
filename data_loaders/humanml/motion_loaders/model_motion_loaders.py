@@ -50,7 +50,7 @@ def get_control_dataset(args, gen_loader, clip_model, diffusion_root, diffusion,
     print('Generating %s ...' % opt['name'])
     if args.dataset_name == 'snapmogen':
         dataset = CompSnapMoGen(args, gen_loader, clip_model, diffusion_root, diffusion, mm_num_samples, mm_num_repeats, num_samples_limit)
-        motion_loader = DataLoader(dataset, batch_size=64, collate_fn=None, drop_last=True, num_workers=0)
+        motion_loader = DataLoader(dataset, batch_size=64, collate_fn=collate_fn, drop_last=True, num_workers=0)
         mm_dataset = MMGeneratedDataset(opt, dataset, None)
         mm_motion_loader = DataLoader(mm_dataset, batch_size=1, num_workers=1)
         print('SnapMoGen Motion Loader Completed!!!')
