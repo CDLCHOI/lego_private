@@ -38,6 +38,7 @@ def get_args_parser():
     # parser.add_argument('--train_max_noisy_step', type=int, default=0)
     parser.add_argument('--init_eval', action='store_true', default=False)
     parser.add_argument('--eval_during_train', action='store_true', default=False)
+    parser.add_argument('--vis_during_train', action='store_true', default=False, help='在训练验证时可视化 SnapMoGen motion 并保存为 MP4（仅 dataset_name=snapmogen 时生效）')
     parser.add_argument('--max_motion_length', type=int, default=196)
     parser.add_argument('--only_emb_loss', action='store_true', default=False)
     parser.add_argument('--text_cos_loss', type=float, default=0)

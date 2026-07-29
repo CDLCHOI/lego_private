@@ -392,6 +392,9 @@ def evaluation(eval_wrapper, gt_loader, eval_motion_loaders, log_file, replicati
                                    'Trajectory Error': OrderedDict({}),
                                    'CLIP Score': OrderedDict({})},)
 
+        # 用于可视化的 motion 数据（仅 SnapMoGen 有效）
+        vis_motion_data = None
+
         for replication in range(replication_times):
             motion_loaders = {}
             mm_motion_loaders = {}
@@ -400,6 +403,27 @@ def evaluation(eval_wrapper, gt_loader, eval_motion_loaders, log_file, replicati
                 motion_loader, mm_motion_loader = motion_loader_getter()
                 motion_loaders[motion_loader_name] = motion_loader
                 mm_motion_loaders[motion_loader_name] = mm_motion_loader
+
+            # 取 vald loader 的第一个 batch 的第 0 个 motion 用于可视化
+            if args.dataset_name == 'snapmogen' and vis_motion_data is None:
+                vald_loader = motion_loaders.get('vald')
+                if vald_loader is not None:
+                    try:
+                        first_batch = next(iter(vald_loader))
+                        caption, motions, m_lens = first_batch
+                        # 获取数据集 mean/std 用于后续反归一化
+                        dataset_obj = vald_loader.dataset
+                        ds_mean = dataset_obj.dataset.mean
+                        ds_std = dataset_obj.dataset.std
+                        vis_motion_data = {
+                            'motion': motions[0].copy(),       # (L, 296)
+                            'm_length': int(m_lens[0]),
+                            'caption': str(caption[0]),
+                            'mean': ds_mean.copy(),
+                            'std': ds_std.copy(),
+                        }
+                    except Exception as e:
+                        print(f'[WARNING] 获取可视化 motion 失败: {e}')
 
             print(f'==================== Replication {replication} ====================')
             print(f'==================== Replication {replication} ====================', file=f, flush=True)
@@ -513,7 +537,7 @@ def evaluation(eval_wrapper, gt_loader, eval_motion_loaders, log_file, replicati
                         line += '(top %d) Mean: %.4f CInt: %.4f;' % (i+1, mean[i], conf_interval[i])
                     print(line)
                     print(line, file=f, flush=True)
-        return mean_dict
+        return mean_dict, vis_motion_data
 
 
 

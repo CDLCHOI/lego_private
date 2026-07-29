@@ -566,7 +566,29 @@ class GaussianDiffusionSimple:
 
 
         # ['Matching Score_ground truth', 'Matching Score_vald', 'R_precision_ground truth', 'R_precision_vald', 'FID_ground truth', 'FID_vald', 'Diversity_ground truth', 'Diversity_vald']
-        metric_dict = evaluation(eval_wrapper, self.gt_loader, eval_motion_loaders, self.log_file)
+        metric_dict, vis_motion_data = evaluation(eval_wrapper, self.gt_loader, eval_motion_loaders, self.log_file)
+
+        # SnapMoGen 训练时可视化
+        if self.args.vis_during_train and self.args.dataset_name == 'snapmogen' and vis_motion_data is not None:
+            try:
+                from utils.visualize.vis_snapmogen import visualize_snapmogen
+
+                vis_dir = os.path.join(self.args.out_dir, 'vis')
+                os.makedirs(vis_dir, exist_ok=True)
+                vis_path = os.path.join(vis_dir, f'iter_{nb_iter:06d}.mp4')
+
+                visualize_snapmogen(
+                    motion=vis_motion_data['motion'],
+                    output_path=vis_path,
+                    caption=vis_motion_data.get('caption', ''),
+                    mean=vis_motion_data.get('mean'),
+                    std=vis_motion_data.get('std'),
+                    fps=30,
+                    m_length=vis_motion_data.get('m_length'),
+                )
+                print(f'[Vis] 已保存训练可视化: {vis_path}')
+            except Exception as e:
+                print(f'[Vis] 可视化失败 (iter={nb_iter}): {e}')
         
         # 测试结束后再次固定随机种子，确保后续训练的连续性和可重复性
         fixseed(self.args.seed)

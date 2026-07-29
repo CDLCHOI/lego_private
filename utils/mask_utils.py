@@ -268,7 +268,7 @@ def load_ckpt(net, ckpt_path, key=None, strict=True, filter=False):
     ckpt = torch.load(ckpt_path, map_location='cpu')
     if key:
         ckpt = ckpt[key]
-
+        
     if strict:
         missing_keys, unexpected_keys = net.load_state_dict(ckpt, strict=strict)
     else:
