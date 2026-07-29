@@ -8,6 +8,8 @@ def get_args_parser():
     parser.add_argument('--evaluator_train_type', type=str, default='gru', choices=['gru', 'snapmogen', 'tmr'])
     parser.add_argument('--evaluator_train_dim_pose', type=int, default=None, choices=[148,292], help='SnapMoGen evaluator motion encoder 的输入维度（148 或 292）')
     parser.add_argument('--correct_snapmogen_norm', action='store_true', default=False, help='使用从训练集重新计算的 mean/std（dataset/snapmogen_norm/）替代官方预置的错误归一化参数')
+    parser.add_argument('--correct_snapmogen_norm_all', action='store_true', default=False, help='使用从全数据集（train+test）计算的逐元素 mean/std（dataset/snapmogen_norm/mean_all.npy, std_all.npy）。优先级高于 --correct_snapmogen_norm')
+    parser.add_argument('--snapmogen_no_norm', action='store_true', default=False, help='不进行任何归一化，直接将原始 motion 数据送入扩散模型训练（mean=0, std=1）')
     parser.add_argument('--random_gt', action='store_true', default=False)
     parser.add_argument('--ablation_separate_update', action='store_true', default=False) # 高级loss只更新CLIP，MSE loss只更新MDM
     parser.add_argument('--train_sample_num', type=int, default=0)

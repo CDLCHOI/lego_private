@@ -532,11 +532,20 @@ def DataLoader(batch_size, args, shuffle=False, mode='train', split='train', num
 
         # 加载均值和标准差
         # GT 数据始终使用官方 mean/std，因为 evaluator 是在官方归一化数据上训练的
-        # 训练数据：correct_snapmogen_norm=True 时使用修正后的 mean/std
+        # snapmogen_no_norm: 不做任何归一化，mean=0, std=1（GT 模式除外）
         if mode == 'gt':
             mean = np.load(pjoin(meta_dir, 'mean.npy'))
             std = np.load(pjoin(meta_dir, 'std.npy'))
             print('[SnapMoGen] GT mode: using official mean/std from', meta_dir)
+        elif getattr(args, 'snapmogen_no_norm', False):
+            mean = np.zeros(296, dtype=np.float32)
+            std = np.ones(296, dtype=np.float32)
+            print('[SnapMoGen] snapmogen_no_norm=True: using mean=0, std=1 (no normalization)')
+        elif getattr(args, 'correct_snapmogen_norm_all', False):
+            norm_dir = './dataset/snapmogen_norm'
+            mean = np.load(pjoin(norm_dir, 'mean_all.npy'))
+            std = np.load(pjoin(norm_dir, 'std_all.npy'))
+            print('[SnapMoGen] Using corrected mean/std (all data) from', norm_dir)
         elif getattr(args, 'correct_snapmogen_norm', False):
             norm_dir = './dataset/snapmogen_norm'
             mean = np.load(pjoin(norm_dir, 'mean.npy'))

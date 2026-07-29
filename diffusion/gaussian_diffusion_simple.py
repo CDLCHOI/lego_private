@@ -152,7 +152,15 @@ class GaussianDiffusionSimple:
         elif self.args.dataset_name == 'snapmogen':
             self.n_joints = 24
             # SnapMoGen 使用其数据集目录下的 mean.npy 和 std.npy
-            if getattr(self.args, 'correct_snapmogen_norm', False):
+            if getattr(self.args, 'snapmogen_no_norm', False):
+                snapmogen_mean = np.zeros(296, dtype=np.float32)
+                snapmogen_std = np.ones(296, dtype=np.float32)
+                print('[SnapMoGen] snapmogen_no_norm=True: using mean=0, std=1 (no normalization)')
+            elif getattr(self.args, 'correct_snapmogen_norm_all', False):
+                snapmogen_mean = np.load('./dataset/snapmogen_norm/mean_all.npy')
+                snapmogen_std = np.load('./dataset/snapmogen_norm/std_all.npy')
+                print('[SnapMoGen] Using corrected mean/std (all data) for diffusion')
+            elif getattr(self.args, 'correct_snapmogen_norm', False):
                 snapmogen_mean = np.load('./dataset/snapmogen_norm/mean.npy')
                 snapmogen_std = np.load('./dataset/snapmogen_norm/std.npy')
                 print('[SnapMoGen] Using corrected mean/std for diffusion')
@@ -164,16 +172,16 @@ class GaussianDiffusionSimple:
             # SnapMoGen 的 raw_mean 和 raw_std 暂时使用默认值
             self.raw_mean = torch.zeros(1, 1, 24, 3).cuda()
             self.raw_std = torch.ones(1, 1, 24, 3).cuda()
-            # 当使用正确的 mean/std 训练时，同时加载官方 mean/std，
-            # 用于将 motion 转换到 evaluator 期望的归一化空间
-            if getattr(self.args, 'correct_snapmogen_norm', False):
+            # 当训练归一化空间与官方不一致时（correct_snapmogen_norm 或 snapmogen_no_norm），
+            # 需要加载官方 mean/std，用于将 motion 转换到 evaluator 期望的归一化空间
+            if getattr(self.args, 'correct_snapmogen_norm_all', False) or getattr(self.args, 'correct_snapmogen_norm', False) or getattr(self.args, 'snapmogen_no_norm', False):
                 official_mean = np.load('/data/motion/SnapMoGen/meta_data/mean.npy')
                 official_std = np.load('/data/motion/SnapMoGen/meta_data/std.npy')
                 self.official_mean = torch.from_numpy(official_mean).cuda()[None, None, ...].float()
                 self.official_std = torch.from_numpy(official_std).cuda()[None, None, ...].float()
                 print('[SnapMoGen] Loaded official mean/std for evaluator space conversion')
             else:
-                self.official_mean = None
+                self.official_mean = None # 为None时，_convert_to_official_norm就不会对motion做变换
                 self.official_std = None
 
         
