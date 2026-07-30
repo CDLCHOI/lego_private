@@ -78,8 +78,8 @@ if __name__ == '__main__':
     std = np.load('./dataset/HumanML3D/Std.npy')
 
     clip_text = (
-        'wave the right hand',
-        'A person raises his right hand to shoulder height, then waves the hand quickly.',
+        'A person faces forward and walks backward in a straight line',
+        'A person faces forward and walks backward',
         # 'A man waves right hand.',
         # 'A person is waving his right hand.',
         # 'A person is standing. At first, his hands are hanging down. Then, his right hand rises from below and upwards, making a greeting gesture.',

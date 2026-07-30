@@ -358,7 +358,7 @@ def plot_3d_motion(save_path, kinematic_tree, joints, title, figsize=(10, 10), f
     # (seq_len, joints_num, 3)
     data = joints.copy().reshape(len(joints), -1, 3)
     fig = plt.figure(figsize=figsize)
-    ax = p3.Axes3D(fig)
+    ax = fig.add_subplot(111, projection='3d')
     init()
     MINS = data.min(axis=0).min(axis=0)
     MAXS = data.max(axis=0).max(axis=0)
@@ -379,8 +379,7 @@ def plot_3d_motion(save_path, kinematic_tree, joints, title, figsize=(10, 10), f
 
     def update(index):
         #         print(index)
-        # ax.lines = []  # 这个会报错 AttributeError: can't set attribute
-        ax.cla() # 替换成这个，还没试
+        ax.clear()
         # ax.collections = []
         ax.view_init(elev=120, azim=-90)
         ax.dist = 7.5
