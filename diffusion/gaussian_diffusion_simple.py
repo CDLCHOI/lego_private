@@ -223,7 +223,7 @@ class GaussianDiffusionSimple:
             self.num_timesteps = int(self.betas.shape[0])
             alphas = 1.0 - self.betas # (1000,)
             self.alphas_cumprod = np.cumprod(alphas, axis=0)
-        print(f"\n modeltype: {self.modeltype}, diffusion step: {self.num_timesteps} \n")
+        print(f"\n === modeltype: {self.modeltype}, diffusion step: {self.num_timesteps} \n")
         #### DDIM 相关设定
 
         self.alphas_cumprod_prev = np.append(1.0, self.alphas_cumprod[:-1]) # alpha t-1的累乘 # (1000,)
@@ -290,7 +290,7 @@ class GaussianDiffusionSimple:
 
     def trainer_func_mdm(self, dataloader_iter, logger, optimizer, scheduler, optimizer_clip=None):
         ''' 跑新idea的 不属于CMC '''
-        self.best_fid = 100
+        self.best_fid = 300
         self.best_Rprec = 0
         self.best_diff = 0 # Rprec-FID的差值
         if self.args.init_eval:
@@ -460,8 +460,11 @@ class GaussianDiffusionSimple:
         print(f'Save ckpt to {ckpt_path}')
 
     def _eval_during_train(self, nb_iter, logger):
-
-        from eval_cmc import evaluation
+        if self.args.dataset_name == 'snapmogen':
+            logger.info('=== from eval_snapmogen import evaluation ===')
+            from eval_snapmogen import evaluation
+        else:
+            from eval_cmc import evaluation
         # 重新固定随机种子，确保测试过程的随机性可控
         fixseed(self.args.seed)
         
@@ -480,7 +483,7 @@ class GaussianDiffusionSimple:
         
         # 根据数据集类型选择 evaluator
         if self.args.dataset_name == 'snapmogen':
-            if self.args.evaluator_eval_type == 'snapmogen':
+            if self.args.evaluator_eval_type is None or self.args.evaluator_eval_type == 'snapmogen':
                 logger.info('=== Loading Official evaluator for SnapMoGen Evaluation ===')
                 
                 from models.snapmogen_evaluator import EvaluatorWrapper
@@ -492,7 +495,7 @@ class GaussianDiffusionSimple:
                 eval_wrapper = EvaluatorWrapper(eval_cfg, device=torch.device('cuda'))
                 eval_wrapper.text_enc.eval()
                 eval_wrapper.latent_enc.eval()
-            elif self.args.evaluator_eval_type == 'gru':
+            elif self.args.evaluator_eval_type == 'gru': # only for debug how good is my trained gru-based evalutor
                 logger.info('=== Loading GRU evaluator for SnapMoGen Evaluation ===')
                 eval_wrapper = EvaluatorMDMWrapper(self.args.dataset_name, torch.device('cuda'), self.args, self.args.evaluator_eval)
                 eval_wrapper.text_encoder.eval()
@@ -597,58 +600,44 @@ class GaussianDiffusionSimple:
         if self.eval_wrapper is None:
             return loss, msg
 
-        # 判断 evaluator 类型：T5 (有 latent_enc) vs GRU (EvaluatorMDMWrapper)
-        is_t5_evaluator = hasattr(self.eval_wrapper, 'latent_enc')
-        if is_t5_evaluator:
-            eval_dim = self.eval_wrapper.latent_enc.nfeats
-        else:
-            # GRU evaluator: dim_pose 包含 contacts 维度
-            eval_dim = self.eval_wrapper.dim_pose
+        if self.args.text_cos_loss or self.args.cos_loss:
+            eval_dim = 148
+            if self.args.evaluator_train_dim_pose is not None:
+                eval_dim = self.args.evaluator_train_dim_pose
 
-        # 当使用正确的归一化参数训练时，需要将 pred/gt 从正确空间转换到
-        # 官方归一化空间，因为 evaluator 是在官方归一化数据上训练的
-        pred_for_eval = self._convert_to_official_norm(pred[..., :eval_dim])
-        gt_for_eval = self._convert_to_official_norm(gt[..., :eval_dim])
+            # 当使用正确的归一化参数训练时，需要将 pred/gt 从正确空间转换到
+            # 官方归一化空间，因为 evaluator 是在官方归一化数据上训练的
 
-        if self.args.text_cos_loss:
-            if is_t5_evaluator:
+            if self.args.evaluator_train_type == 'snapmogen':
+                pred_for_eval = self._convert_to_official_norm(pred[..., :eval_dim])
+                gt_for_eval = self._convert_to_official_norm(gt[..., :eval_dim])
                 text_emb, _ = self.eval_wrapper.encode_text(clip_text, sample_mean=True)
                 text_emb = text_emb.to(gt.device)
                 with torch.enable_grad():
                     _, pred_emb, _ = self.eval_wrapper.encode_motion(pred_for_eval, real_length, sample_mean=False)
-            else:
-                # GRU evaluator: 通过 word_embeddings/pos_one_hots 计算 text_cos_loss
+            elif self.args.evaluator_train_type == 'gru':
+                pred_for_eval = self._convert_to_official_norm(pred[..., :eval_dim+4])
+                gt_for_eval = self._convert_to_official_norm(gt[..., :eval_dim+4])
                 text_emb, pred_emb = self.eval_wrapper.get_co_embeddings_with_grad(
                     word_embeddings, pos_one_hots, sent_len, pred_for_eval, real_length
                 )
                 _, gt_emb = self.eval_wrapper.get_co_embeddings_with_grad(
                     word_embeddings, pos_one_hots, sent_len, gt_for_eval, real_length
                 )
-
-            text_cos_loss = 1 - F.cosine_similarity(text_emb, pred_emb, dim=-1).mean()
-            self.writer.add_scalar('Loss/text_cos_loss', text_cos_loss.item(), iter)
-            loss += self.args.text_cos_loss * text_cos_loss
-            msg += f" text_cos_loss. {text_cos_loss:.4f}"
-
-        if self.args.cos_loss:
-            if is_t5_evaluator:
-                _, gt_emb, _ = self.eval_wrapper.encode_motion(gt_for_eval, real_length, sample_mean=False)
-                with torch.enable_grad():
-                    _, pred_emb, _ = self.eval_wrapper.encode_motion(pred_for_eval, real_length, sample_mean=False)
             else:
-                # GRU evaluator: gt 无需梯度，pred 需要梯度
-                gt_emb = self.eval_wrapper.get_motion_embeddings(
-                    gt_for_eval, real_length
-                )
-                pred_emb = self.eval_wrapper.get_motion_embeddings_with_grad(
-                    pred_for_eval, real_length
-                )
+                raise NotImplementedError('=== args.evaluator_train_typenly support snapmogen and gru')
 
-            # 计算余弦相似度损失
-            cos_loss = 1 - F.cosine_similarity(gt_emb, pred_emb, dim=-1).mean()
-            self.writer.add_scalar('Loss/cos_loss', cos_loss.item(), iter)
-            loss += self.args.cos_loss * cos_loss
-            msg += f" cos_loss. {cos_loss:.5f}"
+            if self.args.text_cos_loss:
+                text_cos_loss = 1 - F.cosine_similarity(text_emb, pred_emb, dim=-1).mean()
+                self.writer.add_scalar('Loss/text_cos_loss', text_cos_loss.item(), iter)
+                loss += self.args.text_cos_loss * text_cos_loss
+                msg += f" text_cos_loss. {text_cos_loss:.4f}"
+
+            if self.args.cos_loss:
+                cos_loss = 1 - F.cosine_similarity(gt_emb, pred_emb, dim=-1).mean()
+                self.writer.add_scalar('Loss/cos_loss', cos_loss.item(), iter)
+                loss += self.args.cos_loss * cos_loss
+                msg += f" cos_loss. {cos_loss:.5f}"
 
         return loss, msg
 

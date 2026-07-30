@@ -136,6 +136,7 @@ def evaluate_matching_score(eval_wrapper, motion_loaders, file):
     match_score_sim_dict = OrderedDict({})
     R_precision_sim_dict = OrderedDict({})
     activation_dict = OrderedDict({})
+    fid_activation_dict = OrderedDict({})
     clip_score_dict = OrderedDict({}) # 加入CLIPscore指标
 
     print('========== Evaluating Matching Score ==========')
@@ -144,7 +145,9 @@ def evaluate_matching_score(eval_wrapper, motion_loaders, file):
     emb_dict = {'ground truth':[], 'vald':[]}
 
     for motion_loader_name, motion_loader in motion_loaders.items():
+
         all_motion_embeddings = []
+        all_fid_embeddings = []
         score_list = []
         all_size = 0
         matching_score_sum = 0
@@ -154,13 +157,75 @@ def evaluate_matching_score(eval_wrapper, motion_loaders, file):
         matching_score_sim_sum = 0
 
         clip_score_real = 0
-                
+
         with torch.no_grad():
             for idx, batch in enumerate(motion_loader):
-                caption, motions, m_lens = batch
-                motions = motions.float().cuda()[...,:148]
-                text_embeddings, _ = eval_wrapper.encode_text(caption, sample_mean=True)
-                _, motion_embeddings, _ = eval_wrapper.encode_motion(motions, m_lens, sample_mean=True)
+                if args.dataset_name == 'snapmogen':
+                    # SnapMoGen GT/vald 统一：7 元组
+                    word_embeddings, pos_one_hots, caption, sent_lens, motions, m_lens, _ = batch
+                    motions = motions.float().cuda()
+                    if args.evaluator_eval_type == 'gru':
+                        text_embeddings, motion_embeddings = eval_wrapper.get_co_embeddings(
+                            word_embs=word_embeddings,
+                            pos_ohot=pos_one_hots,
+                            cap_lens=sent_lens,
+                            motions=motions[:148],
+                            m_lens=m_lens
+                        )
+                        # GRU evaluator 没有 fid_emb 概念，用 motion_embeddings 作为 fid
+                        fid_emb = motion_embeddings
+                    else:
+                        # SnapMoGen official evaluator 路径
+                        motions = motions[...,:148]
+                        text_embeddings, _ = eval_wrapper.encode_text(caption, sample_mean=True)
+                        fid_emb, motion_embeddings, _ = eval_wrapper.encode_motion(
+                            motions, m_lens, sample_mean=args.sample_mean
+                        )
+
+                else:
+                    if len(batch) == 7:
+                        word_embeddings, pos_one_hots, caption, sent_lens, motions, m_lens, _ = batch
+                    elif motion_loader_name == 'ground truth':
+                        # data_control.py
+                        word_embeddings, pos_one_hots, caption, sent_lens, motions, m_lens, _, _, _, _, filename = batch
+                    else:
+                        # comp_v6_model_dataset.py
+                        word_embeddings, pos_one_hots, caption, sent_lens, motions, m_lens, _, _, filename = batch
+
+                    if args.evaluator_eval is not None and 'MARDM' in args.evaluator_eval:
+                        (text_embeddings, motion_embeddings), (et_pred_clip, em_pred_clip) = eval_wrapper.get_co_embeddings(
+                            word_embs=word_embeddings,
+                            pos_ohot=pos_one_hots,
+                            cap_lens=sent_lens,
+                            captions=caption,
+                            motions=motions,
+                            m_lens=m_lens
+                        )
+                    else:
+                        if args.evaluator_eval_type == 'tmr':
+                            # TMR evaluator 使用 raw text (captions) 编码文本
+                            text_embeddings, motion_embeddings = eval_wrapper.get_co_embeddings(
+                                word_embs=word_embeddings,
+                                pos_ohot=pos_one_hots,
+                                cap_lens=sent_lens,
+                                motions=motions,
+                                m_lens=m_lens,
+                                captions=caption
+                            )
+                        else:
+                            text_embeddings, motion_embeddings = eval_wrapper.get_co_embeddings(
+                                word_embs=word_embeddings,
+                                pos_ohot=pos_one_hots,
+                                cap_lens=sent_lens,
+                                motions=motions,
+                                m_lens=m_lens
+                            )
+                # except: 67的评估器，有需要在用
+                #     text_embeddings, motion_embeddings = eval_wrapper.get_co_embeddings(word_embeddings, pos_one_hots, sent_lens, caption, motions[...,:67], m_lens)
+
+                # 非 SnapMoGen 官方 evaluator 路径：motion_embeddings 兼作 fid_emb
+                if args.dataset_name != 'snapmogen' or args.evaluator_eval_type == 'gru':
+                    fid_emb = motion_embeddings
 
                 emb_dict[motion_loader_name].append(motion_embeddings)
                 
@@ -190,16 +255,17 @@ def evaluate_matching_score(eval_wrapper, motion_loaders, file):
 
                 all_size += text_embeddings.shape[0]
                 all_motion_embeddings.append(motion_embeddings.cpu().numpy())
+                all_fid_embeddings.append(fid_emb.cpu().numpy())
 
-                # if args.evaluator_eval is not None and 'MARDM' in args.evaluator_eval:
-                # # 加个MARDM的CLIPscore
-                #     batch_clip_score_pred = 0
-                #     for j in range(32):
-                #         single_em = em_pred_clip[j]
-                #         single_et = et_pred_clip[j]
-                #         clip_score = (single_em @ single_et.T).item()
-                #         batch_clip_score_pred += clip_score
-                #     clip_score_real += batch_clip_score_pred
+                if args.evaluator_eval is not None and 'MARDM' in args.evaluator_eval:
+                # 加个MARDM的CLIPscore
+                    batch_clip_score_pred = 0
+                    for j in range(32):
+                        single_em = em_pred_clip[j]
+                        single_et = et_pred_clip[j]
+                        clip_score = (single_em @ single_et.T).item()
+                        batch_clip_score_pred += clip_score
+                    clip_score_real += batch_clip_score_pred
 
             all_motion_embeddings = np.concatenate(all_motion_embeddings, axis=0)
             matching_score = matching_score_sum / all_size
@@ -207,6 +273,8 @@ def evaluate_matching_score(eval_wrapper, motion_loaders, file):
             match_score_dict[motion_loader_name] = matching_score
             R_precision_dict[motion_loader_name] = R_precision
             activation_dict[motion_loader_name] = all_motion_embeddings
+            all_fid_embeddings = np.concatenate(all_fid_embeddings, axis=0)
+            fid_activation_dict[motion_loader_name] = all_fid_embeddings
             # 加入sim相似度指标
             matching_score_sim = matching_score_sim_sum / all_size
             R_precision_sim = topk_count_sim_sum / all_size
@@ -246,25 +314,47 @@ def evaluate_matching_score(eval_wrapper, motion_loaders, file):
     gen_emb = torch.cat(emb_dict['vald'], axis=0)
     # plot_tsne(gt_emb.numpy(), gen_emb.numpy())
 
-    return match_score_dict, R_precision_dict, activation_dict, match_score_sim_dict, R_precision_sim_dict, clip_score_dict
+    return match_score_dict, R_precision_dict, activation_dict, match_score_sim_dict, R_precision_sim_dict, clip_score_dict, fid_activation_dict
 
 
-def evaluate_fid(eval_wrapper, groundtruth_loader, activation_dict, file):
+def evaluate_fid(eval_wrapper, groundtruth_loader, fid_activation_dict, file):
     eval_dict = OrderedDict({})
-    gt_motion_embeddings = []
+    gt_fid_embeddings = []
     print('========== Evaluating FID ==========')
+
     with torch.no_grad():
         for idx, batch in enumerate(groundtruth_loader):
-            caption, motions, m_lens = batch
-            motions = motions.float().cuda()[...,:148]
-            _, motion_embeddings, _ = eval_wrapper.encode_motion(motions, m_lens, sample_mean=False)
+            if args.dataset_name == 'snapmogen':
+                # SnapMoGen GT 数据：7 元组 (word_embeddings, pos_one_hots, caption, sent_len, motion, m_length, tokens)
+                _, _, _, _, motions, m_lens, _ = batch
+                motions = motions.float().cuda()
+                if args.evaluator_eval_type == 'gru':
+                    # GRU evaluator：无 fid_emb 概念，用 motion_embeddings 代替
+                    fid_emb = eval_wrapper.get_motion_embeddings(
+                        motions=motions,
+                        m_lens=m_lens
+                    )
+                else:
+                    # SnapMoGen official evaluator：截取前 148 维，取 encode_motion 的第一个返回值 fid_emb
+                    motions = motions[...,:148]
+                    fid_emb, _, _ = eval_wrapper.encode_motion(
+                        motions, m_lens, sample_mean=True
+                    )
+            else:
+                # t2m / kit 数据集：保留原有逻辑
+                word_embeddings, pos_one_hots, _, sent_lens, motions, m_lens, _, _, _, _, filename = batch
+                if eval_wrapper.dim_pose < 100:
+                    motions = motions[...,:67]
+                fid_emb = eval_wrapper.get_motion_embeddings(
+                    motions=motions,
+                    m_lens=m_lens
+                )
+            gt_fid_embeddings.append(fid_emb.cpu().numpy())
+    gt_fid_embeddings = np.concatenate(gt_fid_embeddings, axis=0)
+    gt_mu, gt_cov = calculate_activation_statistics(gt_fid_embeddings)
 
-            gt_motion_embeddings.append(motion_embeddings.cpu().numpy())
-    gt_motion_embeddings = np.concatenate(gt_motion_embeddings, axis=0)
-    gt_mu, gt_cov = calculate_activation_statistics(gt_motion_embeddings)
-
-    for model_name, motion_embeddings in activation_dict.items():
-        mu, cov = calculate_activation_statistics(motion_embeddings)
+    for model_name, fid_embeddings in fid_activation_dict.items():
+        mu, cov = calculate_activation_statistics(fid_embeddings)
         fid = calculate_frechet_distance(gt_mu, gt_cov, mu, cov)
         print(f'---> [{model_name}] FID: {fid:.4f}')
         print(f'---> [{model_name}] FID: {fid:.4f}', file=file, flush=True)
@@ -286,6 +376,7 @@ def evaluate_diversity(activation_dict, file, diversity_times):
 def evaluate_multimodality(eval_wrapper, mm_motion_loaders, file, mm_num_times):
     eval_dict = OrderedDict({})
     print('========== Evaluating MultiModality ==========')
+
     for model_name, mm_motion_loader in mm_motion_loaders.items():
         mm_motion_embeddings = []
         with torch.no_grad():
@@ -326,30 +417,58 @@ def evaluation(eval_wrapper, gt_loader, eval_motion_loaders, log_file, replicati
                                    'Trajectory Error': OrderedDict({}),
                                    'CLIP Score': OrderedDict({})},)
 
+        # 用于可视化的 motion 数据（仅 SnapMoGen 有效）
+        vis_motion_data = None
+
         for replication in range(replication_times):
             motion_loaders = {}
             mm_motion_loaders = {}
             motion_loaders['ground truth'] = gt_loader
-            for motion_loader_name, motion_loader_getter in eval_motion_loaders.items():
-                motion_loader, mm_motion_loader = motion_loader_getter()
-                motion_loaders[motion_loader_name] = motion_loader
-                mm_motion_loaders[motion_loader_name] = mm_motion_loader
+            if not args.test_no_vald:
+                for motion_loader_name, motion_loader_getter in eval_motion_loaders.items():
+                    motion_loader, mm_motion_loader = motion_loader_getter()
+                    motion_loaders[motion_loader_name] = motion_loader
+                    mm_motion_loaders[motion_loader_name] = mm_motion_loader
+
+            # 取 vald loader 的第一个 batch 的第 0 个 motion 用于可视化
+            if args.dataset_name == 'snapmogen' and vis_motion_data is None:
+                vald_loader = motion_loaders.get('vald')
+                if vald_loader is not None:
+                    try:
+                        first_batch = next(iter(vald_loader))
+                        # CompSnapMoGen vald loader 返回 7 元组
+                        # (word_embeddings, pos_one_hots, caption, sent_len, motion, m_length, tokens_str)
+                        _, _, caption, _, motions, m_lens, _ = first_batch
+                        # 获取数据集 mean/std 用于后续反归一化
+                        dataset_obj = vald_loader.dataset
+                        ds_mean = dataset_obj.dataset.mean
+                        ds_std = dataset_obj.dataset.std
+                        vis_motion_data = {
+                            'motion': motions[0].cpu().numpy(),       # (L, 296)
+                            'm_length': int(m_lens[0]),
+                            'caption': str(caption[0]),
+                            'mean': np.array(ds_mean),
+                            'std': np.array(ds_std),
+                        }
+                    except Exception as e:
+                        print(f'[WARNING] 获取可视化 motion 失败: {e}')
 
             print(f'==================== Replication {replication} ====================')
             print(f'==================== Replication {replication} ====================', file=f, flush=True)
 
-            # print(f'Time: {datetime.now()}')
-            # print(f'Time: {datetime.now()}', file=f, flush=True)
-            # control_l2_dict, skating_ratio_dict, trajectory_score_dict = evaluate_control(motion_loaders, f)
+            print(f'Time: {datetime.now()}')
+            print(f'Time: {datetime.now()}', file=f, flush=True)
+            if args.dataset_name != 'snapmogen':
+                control_l2_dict, skating_ratio_dict, trajectory_score_dict = evaluate_control(motion_loaders, f)
 
             print(f'Time: {datetime.now()}')
             print(f'Time: {datetime.now()}', file=f, flush=True)
-            mat_score_dict, R_precision_dict, acti_dict, mat_score_sim_dict, R_precision_sim_dict, clip_score_dict = evaluate_matching_score(eval_wrapper, motion_loaders, f)
+            mat_score_dict, R_precision_dict, acti_dict, mat_score_sim_dict, R_precision_sim_dict, clip_score_dict, fid_acti_dict = evaluate_matching_score(eval_wrapper, motion_loaders, f)
             
 
             print(f'Time: {datetime.now()}')
             print(f'Time: {datetime.now()}', file=f, flush=True)
-            fid_score_dict = evaluate_fid(eval_wrapper, gt_loader, acti_dict, f)
+            fid_score_dict = evaluate_fid(eval_wrapper, gt_loader, fid_acti_dict, f)
 
             print(f'Time: {datetime.now()}')
             print(f'Time: {datetime.now()}', file=f, flush=True)
@@ -362,7 +481,14 @@ def evaluation(eval_wrapper, gt_loader, eval_motion_loaders, log_file, replicati
 
             print(f'!!! DONE !!!')
             print(f'!!! DONE !!!', file=f, flush=True)
-            
+
+            if args.dataset_name != 'snapmogen':
+                for key, item in skating_ratio_dict.items():
+                    if key not in all_metrics['Skating Ratio']:
+                        all_metrics['Skating Ratio'][key] = [item]
+                    else:
+                        all_metrics['Skating Ratio'][key] += [item]
+
             for key, item in mat_score_dict.items():
                 if key not in all_metrics['Matching Score']:
                     all_metrics['Matching Score'][key] = [item]
@@ -439,7 +565,7 @@ def evaluation(eval_wrapper, gt_loader, eval_motion_loaders, log_file, replicati
                         line += '(top %d) Mean: %.4f CInt: %.4f;' % (i+1, mean[i], conf_interval[i])
                     print(line)
                     print(line, file=f, flush=True)
-        return mean_dict
+        return mean_dict, vis_motion_data
 
 
 

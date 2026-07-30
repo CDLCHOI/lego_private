@@ -111,11 +111,11 @@ if __name__ == '__main__':
     diffusion = create_gaussian_diffusion_simple(args, net, args.modeltype)
 
     try:
-        logger.info(f'load_ckpt(): key=None')
         load_ckpt(net, args.resume_trans, key=None, strict=False, filter=True)
+        logger.info(f'=== Loaded checkpoint from {args.resume_trans} ===')
     except:
-        logger.info(f'load_ckpt(): key=model')
-        load_ckpt(net, args.resume_trans, key='base', strict=False, filter=True) # 读郭岭的MDMdec用
+        load_ckpt(net, args.resume_trans, key='base', strict=False, filter=True)
+        logger.info(f'=== Loaded checkpoint from {args.resume_trans} ===')
     # except:
     #     logger.info(f'load_lora_ckpt():')
     #     load_lora_ckpt(net, args.resume_trans)

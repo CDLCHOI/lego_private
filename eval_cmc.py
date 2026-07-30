@@ -419,10 +419,11 @@ def evaluation(eval_wrapper, gt_loader, eval_motion_loaders, log_file, replicati
             motion_loaders = {}
             mm_motion_loaders = {}
             motion_loaders['ground truth'] = gt_loader
-            for motion_loader_name, motion_loader_getter in eval_motion_loaders.items():
-                motion_loader, mm_motion_loader = motion_loader_getter()
-                motion_loaders[motion_loader_name] = motion_loader
-                mm_motion_loaders[motion_loader_name] = mm_motion_loader
+            if not args.test_no_vald:
+                for motion_loader_name, motion_loader_getter in eval_motion_loaders.items():
+                    motion_loader, mm_motion_loader = motion_loader_getter()
+                    motion_loaders[motion_loader_name] = motion_loader
+                    mm_motion_loaders[motion_loader_name] = mm_motion_loader
 
             # 取 vald loader 的第一个 batch 的第 0 个 motion 用于可视化
             if args.dataset_name == 'snapmogen' and vis_motion_data is None:
