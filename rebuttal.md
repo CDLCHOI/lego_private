@@ -1,12 +1,17 @@
-[W1]: Rationale of text-embedding sensitivity after replacing motion-critical keywords.
+| Method | R@Top 1 | R@Top 2 | R@Top 3 | FID | CLIP Score |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| Real motions | 0.940 ±.001 | 0.976 ±.001 | 0.985 ±.001 | 0.001 ±.000 | 0.837±.000 |
+| MDM  | 0.503 ±.002 | 0.653 ±.002 | 0.727 ±.002 | 57.783 ±.092 | 0.481±.001
+| StableMoFusion | 0.679 ±.002 | 0.823 ±.002 | 0.888 ±.002 | 27.801 ±.063 | 0.605 ±.001
+| MARDM  | 0.659 ±.002 | 0.812 ±.002 | 0.860 ±.002 | 26.878 ±.131 | 0.602±.001
+| MoMask | 0.777 ±.002 | 0.888 ±.002 | 0.927 ±.002 | 17.404 ±.051 | 0.664±.001
+| MoMask++ in | 0.805 ±.002 | 0.904 ±.002 | 0.938 ±.001 | 15.56 ±.071 | 0.684±.001
+| MoMask++ cra | 0.802 ±.001 | 0.905 ±.002 | 0.938 ±.001 | 15.06 ±.065 | 0.685±.001
 
-
-Thanks for this comment. This may be a misunderstanding of our intention. We would like to clarify that we did not assume that replacing a single keyword, such as “left” with “right”, should drastically lower the cosine similarity
-
-> (1)Our point is not that such pairs should become globally dissimilar, but that the text encoder should produce text embeddings that preserve sufficient motion-critical differences for generation. In fact, Appendix C and Figure 6 already analyze this issue. Specifically, we show that the average cosine similarity increases with text length, which reflects the semantic dilution phenomenon. When a sentence is short, the replaced keyword contributes a larger portion of the sentence semantics, while in longer sentences, the semantics of a single keyword can be diluted by richer contextual information.
-
-> (2) Figure 6 suggests that CLIP and LAMP are less sensitive to motion-critical keyword changes. Their similarities remain consistently high across different text lengths and do not clearly reflect the expected semantic dilution trend. In contrast, LeGO-CLIP shows a more length-dependent trend, suggesting that it better captures the relative semantic contribution of the replaced motion-critical keyword.
-
-3）We agree that motions such as “walk left” and “walk right” are highly similar at the global motion-semantic level. However, from the perspective of text-conditioned generation, the text embedding is expected to provide a sufficiently **discriminative conditioning signal**. Although the two prompts share the same global action semantics, the replaced word changes a key attribute. If the resulting text embeddings remain nearly identical, e.g., with very high cosine similarity for CLIP, the diffusion model may receive almost indistinguishable condition vectors through cross-attention. This can make it difficult for the generator to disentangle and control direction-related attributes. A more motion-keyword-sensitive conditioning signal can help the generator better control such motion-critical factors, while still preserving the shared global semantics, even when using a relatively simple generation backbone. Please refer to the response in [W2] below.
-
-4）Following the reviewer’s suggestion, we further computed the cosine similarity between motion embeddings of paired motions. Since our adversarial texts are synthetically constructed by keyword replacement and do not have corresponding ground-truth motions, we instead use the original/mirrored motion pairs provided by HumanML3D, e.g., 000000.npy and M000000.npy. We find that their motion-embedding similarities are close to 1, regardless of whether we use the official evaluator or our trained motion projector. This confirms that left/right mirrored motions are indeed globally similar in motion-embedding space, as the changed directional attributes only affect a small subset of the full motion representation. However, this does not contradict our text-side analysis: our goal is not to force adversarial pairs to have low global similarity, but to ensure that the text embedding preserves sufficient attribute-level differences for controllable generation.
+| | | |  | | |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| MDM+CLIP | xxx | xxx | xxx | xxx | xxx |
+| MDM+BERT | xxx | xxx | xxx | xxx | xxx |
+| LeGO  | xxx | xxx | xxx | xxx | xxx |
+| LeGO without tuning CLIP  | xxx | xxx | xxx | xxx | xxx |
+| MDM+LeGO-CLIP  | xxx | xxx | xxx  | xxx | xxx |

@@ -4,6 +4,10 @@ SnapMoGen 逐维度 mean/std 计算 + 恒定维度分析。
 与官方（按特征组聚合 std）不同，此脚本逐维度独立计算 mean 和 std。
 对于 std 为零的维度（数值完全不变），用 1e-6 作为安全下限，避免归一化时除零。
 
+重要：world_positions 组（dims 148-219）使用统一的组 std 而非逐维度独立 std，
+以保持骨骼几何比例不变。如果使用逐维度独立 std，会导致 X/Y/Z 坐标被不同比例缩放，
+造成前臂变长、手变小等骨骼变形问题。
+
 生成文件：dataset/snapmogen_norm/mean.npy, std.npy
 
 特征组定义（296 维）：
@@ -100,6 +104,23 @@ def compute_per_dim_mean_std(files):
     return mean, std
 
 
+def apply_group_uniform_std(mean, std):
+    """
+    对 world_positions 组（dims 148-219，24 joints × 3）使用统一的组 std，
+    以保持几何比例不被逐维度独立的 std 扭曲。
+
+    如果不做这个处理，逐维度独立的 std 会导致：
+    - 某些维度的 std 小 → 归一化时被放大 → 反归一化后该方向被拉伸
+    - 某些维度的 std 大 → 归一化时被缩小 → 反归一化后该方向被压缩
+    - 最终效果：骨骼比例被扭曲（如前臂变长、手变小等）
+    """
+    pos_dims = FEATURE_GROUPS['world_positions']  # [148, 220)
+    pos_global_std = float(np.sqrt(np.mean(std[pos_dims] ** 2)))
+    print(f'\n  位置维度统一 std: {pos_global_std:.6f} (替代逐维度 std 范围 [{std[pos_dims].min():.4f}, {std[pos_dims].max():.4f}])')
+    std[pos_dims] = pos_global_std
+    return mean, std
+
+
 def analyze_constant_dims(std, n_samples=3):
     """
     分析 std 接近零的维度：检查实际值，解释含义。
@@ -183,6 +204,9 @@ def main():
     # ── 逐维度计算 mean/std ──
     mean, raw_std = compute_per_dim_mean_std(train_files)
 
+    # ── 位置维度使用统一 std（保持几何比例，防止骨骼变形） ──
+    mean, raw_std = apply_group_uniform_std(mean, raw_std)
+
     # ── 应用安全下限 ──
     std = np.maximum(raw_std, FLOOR_STD)
     num_floored = (raw_std < FLOOR_STD).sum()
@@ -220,6 +244,8 @@ def compute_all_data_mean_std():
     all_files = sorted(glob.glob(os.path.join(FEAT_DIR, '*.npy')))
     print(f'\n[全数据集] 共 {len(all_files)} 个文件，计算逐维度 mean/std...')
     mean_all, raw_std_all = compute_per_dim_mean_std(all_files)
+    # 位置维度使用统一 std（保持几何比例）
+    mean_all, raw_std_all = apply_group_uniform_std(mean_all, raw_std_all)
     std_all = np.maximum(raw_std_all, FLOOR_STD)
 
     os.makedirs(OUT_DIR, exist_ok=True)
