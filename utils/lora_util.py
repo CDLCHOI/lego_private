@@ -66,6 +66,55 @@ def apply_lora_attn_mlp(model, encoder_type="text", rank=16, lora_alpha=32, mlp=
 #         lora_dict_new[kk] = v
 #     model.clip_model.load_state_dict(lora_dict_new, strict=False)
 
+def apply_lora_attn_mlp_bert(model, rank=16, lora_alpha=32, mlp=True, attn=True):
+    """对 DistilBERT 文本编码器的 attention 和/或 FFN 层添加 LoRA 可学习参数。
+
+    DistilBERT 的 transformer 层结构：
+        layer.attention: q_lin, k_lin, v_lin, out_lin (nn.Linear)
+        layer.ffn:       lin1, lin2 (nn.Linear)
+
+    Args:
+        model: BERT wrapper (models/mdm_bert/BERT_encoder.py 中的 BERT 实例)
+        rank: LoRA 秩
+        lora_alpha: LoRA alpha 系数
+        mlp: 是否对 FFN 层添加 LoRA
+        attn: 是否对 attention 层添加 LoRA
+    Returns:
+        model: 添加了 LoRA 层的模型
+    """
+    for layer in model.text_model.transformer.layer:
+        if attn:
+            attention = layer.attention
+            for lin_name in ['q_lin', 'k_lin', 'v_lin', 'out_lin']:
+                old_linear = getattr(attention, lin_name)
+                new_linear = lora.Linear(
+                    old_linear.in_features,
+                    old_linear.out_features,
+                    bias=(old_linear.bias is not None),
+                    r=rank,
+                    lora_alpha=lora_alpha,
+                )
+                new_linear.load_state_dict(old_linear.state_dict(), strict=False)
+                setattr(attention, lin_name, new_linear)
+
+        if mlp:
+            ffn = layer.ffn
+            for lin_name in ['lin1', 'lin2']:
+                old_linear = getattr(ffn, lin_name)
+                new_linear = lora.Linear(
+                    old_linear.in_features,
+                    old_linear.out_features,
+                    bias=(old_linear.bias is not None),
+                    r=rank,
+                    lora_alpha=lora_alpha,
+                )
+                new_linear.load_state_dict(old_linear.state_dict(), strict=False)
+                setattr(ffn, lin_name, new_linear)
+
+    lora.mark_only_lora_as_trainable(model)
+    return model
+
+
 def load_lora_mdm_for_eval(net, ckpt_path, use_lora=True, logger=None):
     assert use_lora, 'use_lora must be True'
 

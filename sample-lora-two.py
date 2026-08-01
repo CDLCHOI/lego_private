@@ -37,12 +37,13 @@ if __name__ == '__main__':
     args.dataset_name = 't2m'
     args.batch_size = 1
     args.diffusion_steps = 50
-    args.text_encoder_type = 'clip';args.modeltype = 'mdm_bert'; args.add_clip_lora = True
-    args.resume_trans1 = 'output/0814_MDMCLIPlora_cl10_tcl1_0716_scratch/net_best.pth'
-    # args.resume_trans2 = 'output/0814_MDMCLIPlora_cl1_tcl1_0716_scratch/net_best.pth'
-    args.resume_trans2 = 'output/0814_MDMCLIPlora_cl10_tcl2_0716_scratch/net_best.pth'
-
+    args.text_encoder_type = 'clip';args.modeltype = 'mdm_bert'; 
+    args.resume_trans1 = 'output/0814_MDMCLIP_b128/net_best.pth'
+    
     net1, diffusion1 = build_model(args, args.modeltype, args.resume_trans1)
+
+    args.add_clip_lora = True
+    args.resume_trans2 = 'output/0911_MDMCLIP_preatrainlora_ric1_b64/net_best.pth'
     net2, diffusion2 = build_model(args, args.modeltype, args.resume_trans2)
     
 

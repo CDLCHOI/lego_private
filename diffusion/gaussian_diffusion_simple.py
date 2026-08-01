@@ -295,7 +295,8 @@ class GaussianDiffusionSimple:
         self.best_diff = 0 # Rprec-FID的差值
         if self.args.init_eval:
             FID, R_prec_top3 = self._eval_during_train(0, logger)
-            return
+            # return
+            
         for nb_iter in tqdm(range(1, self.args.total_iter+1), position=0, leave=True):
             batch = next(dataloader_iter)
             if self.args.dataset_name == 'snapmogen':

@@ -25,7 +25,13 @@ class BERT(nn.Module):
 
 
     def forward(self, texts):
-        encoded_inputs = self.tokenizer(texts, return_tensors="pt", padding=True)
+        encoded_inputs = self.tokenizer(
+            texts,
+            return_tensors="pt",
+            padding="max_length",
+            max_length=120,
+            truncation=True,
+        )
         output = self.text_model(**encoded_inputs.to(self.text_model.device)).last_hidden_state
         mask = encoded_inputs.attention_mask.to(dtype=bool)
         # output = output * mask.unsqueeze(-1)

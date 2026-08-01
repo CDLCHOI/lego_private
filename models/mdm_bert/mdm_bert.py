@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import clip
 from .BERT_encoder import load_bert
-from utils.lora_util import apply_lora_attn_mlp
+from utils.lora_util import apply_lora_attn_mlp, apply_lora_attn_mlp_bert
 from data_loaders.humanml.networks.modules import TextEncoderBiGRUCo
 from data_loaders.humanml.utils.word_vectorizer import POS_enumerator
 from models.LAMP.LAMP_minimal_text_net import Net as LAMPNet
@@ -109,6 +109,15 @@ class MDMBERT(nn.Module):
                     print("Loading BERT...")
                     bert_model_path = 'distilbert/distilbert-base-uncased'
                     self.clip_model = load_bert(bert_model_path)  # Sorry for that, the naming is for backward compatibility
+                    if self.args.add_clip_lora:
+                        self.clip_model = apply_lora_attn_mlp_bert(self.clip_model, mlp=True, attn=True)
+                        if self.args.pretrained_lora_path is not None:
+                            lora_weights = torch.load(self.args.pretrained_lora_path, map_location='cpu')['clip_lora']
+                            print(f' === loading bert_lora dict from {self.args.pretrained_lora_path}')
+                            self.load_state_dict(lora_weights, strict=False)  # 读取lora权重
+                            for name, param in self.clip_model.named_parameters():  # 全部冻结
+                                param.requires_grad = False
+
                     self.encode_text =self.bert_encode_text
                     self.clip_dim = 768
                 elif self.text_encoder_type == 'gru':

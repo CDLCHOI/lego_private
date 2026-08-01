@@ -19,6 +19,7 @@ def get_args_parser():
     parser.add_argument('--eval_mode', type=str, default='no_mm', choices=['no_mm', 'with_mm'])
     parser.add_argument('--pretrained_lora_path', type=str, default=None) # 使用ml3d训练的lora并冻结，去训练kit数据集
     parser.add_argument('--add_clip_lora', action='store_true', default=False) # 是否训CLIP
+    parser.add_argument('--random_text_encoder', action='store_true', default=False) # 无视文本编码器预训练权重，采用随机初始化
     parser.add_argument('--text_encoder_type', type=str, default='bert', choices=['bert', 'clip', 'gru', 'lamp'])
     parser.add_argument('--no_random', action='store_true', default=False) # dataset 关闭随机性
     parser.add_argument('--Mean_evaluator', action='store_true', default=False) # 用Mean训练的评估器来train.py里测GT指标

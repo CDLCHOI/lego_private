@@ -157,6 +157,13 @@ if __name__ == '__main__':
     
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=args.lr_scheduler, gamma=args.gamma)
 
+    if args.random_text_encoder:
+        def _reinit_weights(m):
+            if hasattr(m, 'reset_parameters'):
+                m.reset_parameters()
+        net.module.clip_model.apply(_reinit_weights)
+        logger.info('=== Random text encoder: re-initialized all weights ===')
+
     
     if args.modeltype in ['mdm', 'salad', 'mdm_bert']:
         diffusion.log_file = os.path.join(args.out_dir, 'run.log')
