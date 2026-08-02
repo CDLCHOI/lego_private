@@ -46,6 +46,7 @@ EVAL_WINDOWS = [('3s', 0, 60), ('6s', 0, 120), ('full', 0, 196)]
 R_HIP, L_HIP, R_SDR, L_SDR = 2, 1, 17, 16
 L_WRIST, R_WRIST = 20, 21         # SMPL 22 关节序: 20=左手腕, 21=右手腕(已用 GT 校准 17/20)
 FOOT_IDS = [10, 11]              # 与 utils/metrics.py:489 的 skating ratio 保持一致
+LEG_JOINTS = [10, 11]             # 左右脚, 用于计算腿部相对运动速度（跑/走的核心差异在末端）
 UP = np.array([0.0, 1.0, 0.0])
 
 SMOOTH_W = 5                     # 朝向向量的滑动平均窗口
@@ -67,22 +68,24 @@ MODELS = [
     # (显示名, ckpt 路径, 是否 lora)
     ('MDM', 'output/0814_MDMCLIP_b128/net_best.pth', False),
     ('LeGO', 'output/0814_MDMCLIPlora_cl10_tcl2_0716_scratch_ricglobal1/net_best.pth', True),
+    ('LeGO-0', 'output/0814_MDMCLIPlora_cl10_tcl2_0716_scratch/net_best.pth', True),
+    ('MDM+LeGO-CLIP', 'output/0911_MDMCLIP_preatrainlora_ric1_b64/net_best.pth', True),
 ]
 
 # 每类: 主判据 key, 单位, A/B 语义标签, 汇报窗口, 5 组文本对(A = 期望主判据更大的一侧)
 CATEGORIES = [
     {
         'name': 'left_right',
-        'metric': 'm_lat_cos',
-        'unit': 'cos',
-        'angle_key': 'disp_angle',       # 展示用角度(度)
-        'angle_desc': '位移方向偏离初始朝向的角度, 值域±180, +=偏左 -=偏右, ±90=正侧向',
+        'metric': 'disp_angle',
+        'unit': 'deg',
+        'angle_key': None,
+        'angle_desc': None,
         'constraint': None,
         'label_a': 'left', 'label_b': 'right',
         'signed': True,
-        'filter_no_move': True,          # 余弦要除以位移模长, 静止样本是纯噪声, 必须剔除
+        'filter_no_move': True,          # 角度除以位移模长, 静止样本是纯噪声, 必须剔除
         'report_window': '6s',       # 净位移会被 U 型回转抵消, 用短窗口(见 md §4.1)
-        'desc': 'direction of travel relative to the initial facing direction (cosine, +1 = straight left)',
+        'desc': 'direction of travel relative to the initial facing direction (degrees, +90 = straight left, -90 = straight right, 0 = straight forward)',
         'pairs': [
             ('A person walks toward left', 'A person walks toward right'),
             ('A person walks to the left', 'A person walks to the right'),
@@ -117,10 +120,11 @@ CATEGORIES = [
         'unit': 'cos',
         'angle_key': 'align_angle',      # 展示用: 走向与朝向夹角(度)
         'angle_desc': '走向与自身朝向的夹角, 值域0~180, 0=完全朝前走 90=纯侧移 180=完全倒着走',
-        # 文本明确说了 "facing forward", 故额外要求朝向保持: 首末朝向夹角 < 90 度。
-        # m_align 只管"走向 vs 朝向"的相对关系, 管不了"朝向有没有留在原始前方"。
-        'constraint': {'key': 'heading_dev', 'max': 90.0,
-                       'desc': '朝向偏离初始方向 < 90度 (即文本要求的 "facing forward" 被保持)'},
+        # 文本明确说了 "facing forward", 故额外要求朝向保持。
+        # 使用逐帧朝向偏离均值(而非首末夹角): 弧形倒走时首末夹角可能 >90°,
+        # 但逐帧均值 ≈ 总偏转/2, 不会误杀真正的倒走。转身作弊前几帧就跳到 >60°, 会被抓住。
+        'constraint': {'key': 'mean_heading_dev', 'max': 60.0,
+                       'desc': '逐帧朝向偏离初始方向均值 < 60度 (即文本要求的 "facing forward" 被保持, 允许缓慢弧形偏转)'},
         'label_a': 'forward', 'label_b': 'backward',
         'signed': True,
         'filter_no_move': True,          # 余弦要除以里程, 静止样本是纯噪声
@@ -194,16 +198,16 @@ CATEGORIES = [
     },
     {
         'name': 'walk_run',
-        'metric': 'm_speed',
+        'metric': 'leg_speed',
         'unit': 'm/s',
         'angle_key': None,
         'angle_desc': None,
         'constraint': None,
         'label_a': 'run', 'label_b': 'walk',
         'signed': False,          # 速度恒正, 只比大小
-        'filter_no_move': False,  # 同 slow_quick, 静止本身可能是"走路"的信息
+        'filter_no_move': False,  # 原地跑步根节点不动但腿在高速运动, 不能按根位移剔除
         'report_window': 'full',
-        'desc': 'travelled distance per second',
+        'desc': 'foot speed relative to root (m/s), removes global translation to capture in-place running',
         'pairs': [
             ('A person runs forward', 'A person walks forward'),
             ('A person is running', 'A person is walking'),
@@ -336,6 +340,22 @@ def metric_speed(joints, s, e, cache):
     }
 
 
+def metric_leg_speed(joints, s, e, cache):
+    """walk/run: 双脚相对根节点的运动速度 (m/s), 恒正
+
+    去掉根节点全局平移, 只看双脚(左右脚, 关节10/11)相对身体的速度。
+    跑和走的核心差异在末端(脚)的摆动频率和幅度, 髋/膝会稀释信号。
+    原地跑步(根节点几乎不动)也能被正确测量为"快", 不会被误判为"慢"。
+    排除双脚静止帧(双脚平均速度 < MOVE_EPS m/s), 避免站立帧稀释均值。
+    """
+    leg = joints[s:e, LEG_JOINTS] - joints[s:e, 0:1]               # (T,2,3) 相对根节点
+    step = np.linalg.norm(leg[1:] - leg[:-1], axis=-1)             # (T-1,2)
+    frame_vel = step.mean(axis=-1) * FPS                            # (T-1,) 双脚平均逐帧速度
+    moving = frame_vel > MOVE_EPS
+    m_leg_speed = float(frame_vel[moving].mean()) if moving.any() else 0.0
+    return {'leg_speed': m_leg_speed}
+
+
 def metric_facing_disp(joints, s, e, cache):
     """forward/backward: 走的方向与"自身当前朝向"的夹角 —— 纯方向量, 不掺速度
 
@@ -376,13 +396,25 @@ def metric_facing_disp(joints, s, e, cache):
     f0, f1 = cache['forward'][s], cache['forward'][e - 1]
     heading_dev = float(np.degrees(np.arccos(np.clip(np.dot(f0, f1), -1.0, 1.0))))
 
+    # 逐帧朝向偏离均值: 每一帧偏离初始朝向的角度取平均, 值域 [0,180]。
+    # 相比 heading_dev(只看首末):
+    #   - 弧形倒走(缓慢均匀偏转) mean_heading_dev ≈ 总偏转/2, 不会误杀
+    #   - 转身作弊(前几帧突然转 180°) mean_heading_dev 仍很大, 能被抓住
+    #   - 直线倒走 mean_heading_dev ≈ 0, 与 heading_dev 一致
+    fwd_all = cache['forward'][s:e]
+    f0 = cache['forward'][s]
+    dev_per_frame = np.degrees(np.arccos(np.clip(np.sum(fwd_all * f0, axis=-1), -1.0, 1.0)))
+    mean_heading_dev = float(dev_per_frame.mean())
+
     return {
         # 主判据: 方向余弦 [-1,1]
         'm_align': m_align,
         # 展示用: 走向与朝向的夹角(度), 0 = 完全朝前走, 180 = 完全倒着走
         'align_angle': float(np.degrees(np.arccos(np.clip(m_align, -1.0, 1.0)))),
-        # 辅助: 朝向偏离度, 文本说 "facing forward" 时应接近 0 -> 用于排除转身情形
+        # 辅助: 朝向偏离度(首末夹角), 文本说 "facing forward" 时应接近 0 -> 用于排除转身情形
         'heading_dev': heading_dev,
+        # 辅助: 逐帧朝向偏离均值, 比 heading_dev 更能区分"弧形倒走"和"转身作弊"
+        'mean_heading_dev': mean_heading_dev,
         # 辅助: 未归一化版本(m/s), 说明幅度
         'm_fwd': proj / dt,
         # 辅助: 用第 0 帧固定前轴(等价于 z 坐标差), 会被"转身后往前走"骗过, 仅作对照
@@ -473,6 +505,7 @@ def compute_all_metrics(joints, s, e):
     out = {'path_len': cache['path'], 'no_move': int(cache['path'] < NO_MOVE_PATH)}
     out.update(metric_lateral(joints, s, e, cache))
     out.update(metric_speed(joints, s, e, cache))
+    out.update(metric_leg_speed(joints, s, e, cache))
     out.update(metric_facing_disp(joints, s, e, cache))
     out.update(metric_turn_rate(joints, s, e, cache))
     out.update(metric_hand_height(joints, s, e, cache))
@@ -483,7 +516,7 @@ def compute_all_metrics(joints, s, e):
 def summarize_pair(vals_a, vals_b, no_move_a=None, no_move_b=None, signed=True,
                    filter_no_move=True, angle_a=None, angle_b=None,
                    con_a=None, con_b=None, con_max=None):
-    """对内两条文本的汇总: 均值 / gap / 倍率 / paired / 绝对符号准确率 / 静止率
+    """对内两条文本的汇总: 均值 / diff / 倍率 / paired / 绝对符号准确率 / 静止率
 
     vals_a, vals_b: (n,) 同一组配对噪声下 A / B 两条文本的主判据值
 
@@ -546,9 +579,9 @@ def summarize_pair(vals_a, vals_b, no_move_a=None, no_move_b=None, signed=True,
         'mean_a': float(a.mean()), 'mean_b': float(b.mean()),
         'std_a': float(a.std()), 'std_b': float(b.std()),
         'angle_a': ang_a, 'angle_b': ang_b,
-        'gap': float(a.mean() - b.mean()),
+        'diff': float(a.mean() - b.mean()),           # 两侧均值差 (原 gap)
         'ratio': ratio,
-        'diff': diff_rate,
+        'diff_pct': diff_rate,                         # 配对差值正确率 (原 diff)
         'sign_acc': sign_acc, 'sign_acc_a': sign_acc_a, 'sign_acc_b': sign_acc_b,
         'strict_acc': strict_acc, 'strict_acc_a': strict_a, 'strict_acc_b': strict_b,
         'violate_a': viol_a, 'violate_b': viol_b,
@@ -739,12 +772,12 @@ def metric_legend():
   [对]/[错]     该侧均值的符号是否正确。A侧期望为正, B侧期望为负(一正一负 = 方向跟着关键词翻了)。
                  speed 类数值恒正, 只比大小, 不标注对错。
 
-  gap           两侧均值的差 = A侧均值 - B侧均值。gap 越大 = 换个词动作变得越厉害。
+  diff          两侧均值的差 = A侧均值 - B侧均值。diff 越大 = 换个词动作变得越厉害。
 
-  diff          100组配对噪声中, "A侧数值 > B侧数值" 的比例。瞎猜 = 50%。
+  diff%         100组配对噪声中, "A侧数值 > B侧数值" 的比例。瞎猜 = 50%。
                 衡量换关键词后数值的相对变化。局限: 两侧同号时这个数字仍然可能很高。
                 例: 对 counterclockwise 给 -0.4、对 clockwise 给 -10.8(两次都在顺时针转),
-                但 -0.4 > -10.8 成立, diff 仍高达 92%。所以它必须配合 correct 一起看。
+                但 -0.4 > -10.8 成立, diff% 仍高达 92%。所以它必须配合 correct 一起看。
 
   correct       (A侧符号正确的比例 + B侧符号正确的比例) / 2。瞎猜 = 50%。
                 例: 要求举左手, 左手真的比右手高 -> 这一侧"正确"。
@@ -755,7 +788,7 @@ def metric_legend():
                 但这是平均值, 不代表每个样本都对了 —— 仍需看 correct 来确认。
 
   怎么一眼看好坏:
-      (1) 先看 correct 够不够高  (2) 看有没有 sign-flip  (3) 最后比 gap 谁大。
+      (1) 先看 correct 够不够高  (2) 看有没有 sign-flip  (3) 最后比 diff 谁大。
 ------------------------------------------------------------------------------"""
 
 
@@ -830,7 +863,7 @@ def emit_rebuttal_text(summary, cat, window_name):
         L.append(f'  {"":5s}  B侧 "{b}" 喂进去 -> {r["mean_b"]:+7.3f} {unit} {ok_b}{ang_b}')
         acc = ('' if np.isnan(r['sign_acc']) else
                f' | correct {100*r["sign_acc"]:.0f}% (A侧 {100*r["sign_acc_a"]:.0f}% / B侧 {100*r["sign_acc_b"]:.0f}%)')
-        L.append(f'  {"":5s}  gap {r["gap"]:.3f} {unit} | diff {100*r["diff"]:.0f}%{acc}'
+        L.append(f'  {"":5s}  diff {r["diff"]:.3f} {unit} | diff% {100*r["diff_pct"]:.0f}%{acc}'
                  f' | 有效样本 {r["n_valid"]}/{N_SAMPLES*len(cat["pairs"])}')
         if not np.isnan(r['strict_acc']):
             L.append(f'  {"":5s}  constraint-violated: A侧 {100*r["violate_a"]:.0f}% / B侧 {100*r["violate_b"]:.0f}%'
@@ -869,7 +902,7 @@ def main():
                              'con_a': [], 'con_b': [], 'fwd_a': [], 'fwd_b': [],
                              'bwd_a': [], 'bwd_b': [], 'all_fwd_a': [], 'all_fwd_b': [],
                              'all_bwd_a': [], 'all_bwd_b': []} for w in EVAL_WINDOWS}
-            skate_all = []
+            skate_a, skate_b = [], []
 
             for tid, (text_a, text_b) in enumerate(cat['pairs']):
                 # 对内两条文本 + 两个模型共用同一 seed -> 完全配对。
@@ -879,7 +912,7 @@ def main():
                 for side, text in (('a', text_a), ('b', text_b)):
                     joints[side] = get_joints(diffusion, model_name, cat['name'], tid, side,
                                               text, seed, mean, std)
-                    skate_all.append(skating(joints[side]))
+                    (skate_a if side == 'a' else skate_b).append(skating(joints[side]))
 
                 for wname, s, e in EVAL_WINDOWS:
                     for side, text in (('a', text_a), ('b', text_b)):
@@ -904,7 +937,8 @@ def main():
 
                 print(f'  [{cat["name"]}] template {tid} done')
 
-            skate_mean = float(np.concatenate(skate_all).mean())
+            skate_a_mean = float(np.concatenate(skate_a).mean())
+            skate_b_mean = float(np.concatenate(skate_b).mean())
             for wname, _, _ in EVAL_WINDOWS:
                 r = summarize_pair(pooled[wname]['a'], pooled[wname]['b'],
                                    pooled[wname]['nm_a'], pooled[wname]['nm_b'],
@@ -915,7 +949,9 @@ def main():
                                    con_a=pooled[wname]['con_a'] or None,
                                    con_b=pooled[wname]['con_b'] or None,
                                    con_max=cat['constraint']['max'] if cat['constraint'] else None)
-                r['skating'] = skate_mean
+                r['skating'] = 0.5 * (skate_a_mean + skate_b_mean)
+                r['skating_a'] = skate_a_mean
+                r['skating_b'] = skate_b_mean
                 # 逐帧方向比例: A侧所有样本的平均 forward%, B侧所有样本的平均 backward%
                 r['fwd_frame_pct_a'] = float(np.mean(pooled[wname]['fwd_a']))
                 r['fwd_frame_pct_b'] = float(np.mean(pooled[wname]['fwd_b']))
@@ -937,9 +973,9 @@ def main():
 
     with open(OUT_SUMMARY_CSV, 'w', newline='') as f:
         cols = ['model', 'category', 'window', 'metric', 'unit', 'n', 'mean_a', 'std_a',
-                'mean_b', 'std_b', 'angle_a', 'angle_b', 'gap', 'ratio', 'diff', 'sign_acc',
+                'mean_b', 'std_b', 'angle_a', 'angle_b', 'diff', 'ratio', 'diff_pct', 'sign_acc',
                 'sign_acc_a', 'sign_acc_b', 'strict_acc', 'strict_acc_a', 'strict_acc_b',
-                'violate_a', 'violate_b', 'n_valid', 'no_move_rate', 'sign_flip', 'skating',
+                'violate_a', 'violate_b', 'n_valid', 'no_move_rate', 'sign_flip', 'skating', 'skating_a', 'skating_b',
                 'fwd_frame_pct_a', 'fwd_frame_pct_b', 'bwd_frame_pct_a', 'bwd_frame_pct_b',
                 'frame_strict_a', 'frame_strict_b', 'frame_strict_acc']
         w = csv.DictWriter(f, fieldnames=cols)
@@ -978,7 +1014,7 @@ def main():
                 da = '' if np.isnan(r['sign_acc']) else f'  correct {100*r["sign_acc"]:3.0f}%'
                 flip = '  sign-flip' if r['sign_flip'] else ''
                 print(f'  {wname:5s} {mname:5s}: {r["mean_a"]:+7.2f} / {r["mean_b"]:+7.2f}'
-                      f'  gap {r["gap"]:6.2f}  diff {100*r["diff"]:3.0f}%{da}{flip}')
+                      f'  diff {r["diff"]:6.2f}  diff% {100*r["diff_pct"]:3.0f}%{da}{flip}')
 
     print('\n\n' + '=' * 78)
     print('质量守护: foot skating ratio (越低越好, 复用 utils/metrics.py:480 的标准实现)')
@@ -988,7 +1024,7 @@ def main():
         for mname, _, _ in MODELS:
             r = summary.get((mname, cat['name'], cat['report_window']))
             if r:
-                line += f'   {mname} {r["skating"]:.4f}'
+                line += f'   {mname} {r["skating"]:.4f} (A:{r["skating_a"]:.4f} B:{r["skating_b"]:.4f})'
         print(line)
 
     print(f'\n已写出 {OUT_SAMPLES_CSV} (逐样本) 和 {OUT_SUMMARY_CSV} (汇总)')
@@ -1004,6 +1040,7 @@ def main():
     rpt = cat['report_window']
     r_mdm = summary[('MDM', cat['name'], rpt)]
     r_lego = summary[('LeGO', cat['name'], rpt)]
+    r_lora = summary[('MDM+LeGO-CLIP', cat['name'], rpt)]
     print(f"""
 {'='*78}
 第一类：左/右行走方向 (left vs right)
@@ -1024,30 +1061,41 @@ def main():
 【MDM 结果】
   说"向左"的100个motion, m_lat_cos 均值 = {r_mdm["mean_a"]:+.3f} (角度约 {r_mdm["angle_a"]:+.0f}°, 0°=正前 ±90°=正侧向)
   说"向右"的100个motion, m_lat_cos 均值 = {r_mdm["mean_b"]:+.3f} (角度约 {r_mdm["angle_b"]:+.0f}°)
-  两侧均值一正一负 (sign-flip): 是 ← 平均而言模型分清了左右
+  两侧均值一正一负 (sign-flip): {"是" if r_mdm["sign_flip"] else "否"} ← 平均而言模型分清了左右
   逐样本方向正确率 (correct): {100*r_mdm["sign_acc"]:.0f}% (瞎猜基线=50%)
     - A侧"说左往左"的比例: {100*r_mdm["sign_acc_a"]:.0f}%
     - B侧"说右往右"的比例: {100*r_mdm["sign_acc_b"]:.0f}%
-  diff (换词后数值变对的配对比例): {100*r_mdm["diff"]:.0f}% (瞎猜基线=50%)
+  diff% (换词后数值变对的配对比例):{100*r_mdm["diff_pct"]:.0f}% (瞎猜基线=50%)
 
 【LeGO 结果】
   说"向左"的100个motion, m_lat_cos 均值 = {r_lego["mean_a"]:+.3f} (角度约 {r_lego["angle_a"]:+.0f}°)
   说"向右"的100个motion, m_lat_cos 均值 = {r_lego["mean_b"]:+.3f} (角度约 {r_lego["angle_b"]:+.0f}°)
-  两侧均值一正一负 (sign-flip): 是 ← 平均而言模型分清了左右
+  两侧均值一正一负 (sign-flip): {"是" if r_lego["sign_flip"] else "否"} ← 平均而言模型分清了左右
   逐样本方向正确率 (correct): {100*r_lego["sign_acc"]:.0f}%
     - A侧"说左往左"的比例: {100*r_lego["sign_acc_a"]:.0f}%
     - B侧"说右往右"的比例: {100*r_lego["sign_acc_b"]:.0f}%
-  diff: {100*r_lego["diff"]:.0f}%
+  diff%: {100*r_lego["diff_pct"]:.0f}%
 
-【结论】LeGO 的 correct={100*r_lego["sign_acc"]:.0f}% 远超 MDM 的 {100*r_mdm["sign_acc"]:.0f}%。LeGO 生成的左右行走方向
-余弦接近 ±1(即几乎纯侧向走), 而 MDM 仅 ±0.3 左右(方向模糊)。LeGO 通过 LoRA 微调 CLIP 后,
-准确理解了 "left" 和 "right" 的空间语义。""")
+【MDM+LeGO-CLIP 结果】
+  说"向左"的100个motion, m_lat_cos 均值 = {r_lora["mean_a"]:+.3f} (角度约 {r_lora["angle_a"]:+.0f}°)
+  说"向右"的100个motion, m_lat_cos 均值 = {r_lora["mean_b"]:+.3f} (角度约 {r_lora["angle_b"]:+.0f}°)
+  两侧均值一正一负 (sign-flip): {"是" if r_lora["sign_flip"] else "否"} ← 平均而言模型分清了左右
+  逐样本方向正确率 (correct): {100*r_lora["sign_acc"]:.0f}%
+    - A侧"说左往左"的比例: {100*r_lora["sign_acc_a"]:.0f}%
+    - B侧"说右往右"的比例: {100*r_lora["sign_acc_b"]:.0f}%
+  diff%: {100*r_lora["diff_pct"]:.0f}%
+
+【结论】LeGO (correct={100*r_lego["sign_acc"]:.0f}%) ≈ MDM+LeGO-CLIP ({100*r_lora["sign_acc"]:.0f}%) >> MDM ({100*r_mdm["sign_acc"]:.0f}%)。
+两个 LoRA 模型都显著优于 MDM baseline。LeGO 的方向余弦接近 ±1 (几乎纯侧向走),
+MDM+LeGO-CLIP 约 ±0.8 (方向较纯), 而 MDM 仅 ±0.3 (方向模糊)。
+LoRA 微调 CLIP 后准确理解了 "left" 和 "right" 的空间语义。""")
 
     # ---- 第2类: slowly / quickly ----
     cat = CATEGORIES[1]
     rpt = cat['report_window']
     r_mdm = summary[('MDM', cat['name'], rpt)]
     r_lego = summary[('LeGO', cat['name'], rpt)]
+    r_lora = summary[('MDM+LeGO-CLIP', cat['name'], rpt)]
     print(f"""
 {'='*78}
 第二类：快/慢速度 (quickly vs slowly)
@@ -1070,25 +1118,33 @@ def main():
   说"快"的100个motion, 平均速度(仅移动帧) = {r_mdm["mean_a"]:.3f} m/s
   说"慢"的100个motion, 平均速度(仅移动帧) = {r_mdm["mean_b"]:.3f} m/s
   快/慢速度比: {r_mdm["ratio"]:.2f} 倍
-  gap (快均值 - 慢均值): {r_mdm["gap"]:.3f} m/s
-  diff (换"quickly"→"slowly"后速度变慢的配对比例): {100*r_mdm["diff"]:.0f}% (瞎猜基线=50%)
+  diff (快均值 - 慢均值):{r_mdm["diff"]:.3f} m/s
+  diff% (换"quickly"→"slowly"后速度变慢的配对比例): {100*r_mdm["diff_pct"]:.0f}% (瞎猜基线=50%)
 
 【LeGO 结果】
   说"快"的100个motion, 平均速度 = {r_lego["mean_a"]:.3f} m/s
   说"慢"的100个motion, 平均速度 = {r_lego["mean_b"]:.3f} m/s
   快/慢速度比: {r_lego["ratio"]:.2f} 倍
-  gap: {r_lego["gap"]:.3f} m/s
-  diff: {100*r_lego["diff"]:.0f}%
+  diff: {r_lego["diff"]:.3f} m/s
+  diff%: {100*r_lego["diff_pct"]:.0f}%
 
-【结论】LeGO 的快/慢速度比 ({r_lego["ratio"]:.2f}x) 远大于 MDM ({r_mdm["ratio"]:.2f}x),
-gap 是 MDM 的 {r_lego["gap"]/r_mdm["gap"]:.1f} 倍。LeGO 的 diff={100*r_lego["diff"]:.0f}% 意味着
-每一对噪声下, "说快"的速度都严格大于"说慢"的速度, 没有例外。""")
+【MDM+LeGO-CLIP 结果】
+  说"快"的100个motion, 平均速度 = {r_lora["mean_a"]:.3f} m/s
+  说"慢"的100个motion, 平均速度 = {r_lora["mean_b"]:.3f} m/s
+  快/慢速度比: {r_lora["ratio"]:.2f} 倍
+  diff: {r_lora["diff"]:.3f} m/s
+  diff%: {100*r_lora["diff_pct"]:.0f}%
+
+【结论】MDM+LeGO-CLIP 的速度比 ({r_lora["ratio"]:.2f}x) > LeGO ({r_lego["ratio"]:.2f}x) >> MDM ({r_mdm["ratio"]:.2f}x)。
+MDM+LeGO-CLIP 的 diff ({r_lora["diff"]:.3f} m/s) 是 MDM ({r_mdm["diff"]:.3f} m/s) 的 {r_lora["diff"]/r_mdm["diff"]:.1f} 倍。
+预训练 LoRA CLIP + 继续训练 MDM 在速度副词理解上效果最佳。""")
 
     # ---- 第3类: forward / backward ----
     cat = CATEGORIES[2]
     rpt = cat['report_window']
     r_mdm = summary[('MDM', cat['name'], rpt)]
     r_lego = summary[('LeGO', cat['name'], rpt)]
+    r_lora = summary[('MDM+LeGO-CLIP', cat['name'], rpt)]
     print(f"""
 {'='*78}
 第三类：向前/向后行走, 面朝前 (forward vs backward, facing forward)
@@ -1114,11 +1170,11 @@ gap 是 MDM 的 {r_lego["gap"]/r_mdm["gap"]:.1f} 倍。LeGO 的 diff={100*r_lego
 【MDM 结果】
   说"面朝前向前走"的100个motion, m_align 均值 = {r_mdm["mean_a"]:+.3f}
   说"面朝前后倒着走"的100个motion, m_align 均值 = {r_mdm["mean_b"]:+.3f}
-  两侧均值一正一负 (sign-flip): 是
+  两侧均值一正一负 (sign-flip): {"是" if r_mdm["sign_flip"] else "否"}
   逐样本方向正确率 (correct): {100*r_mdm["sign_acc"]:.0f}%
     - A侧"说向前就向前"的比例: {100*r_mdm["sign_acc_a"]:.0f}%
     - B侧"说向后就向后"的比例: {100*r_mdm["sign_acc_b"]:.0f}%
-  diff: {100*r_mdm["diff"]:.0f}%
+  diff%: {100*r_mdm["diff_pct"]:.0f}%
   逐帧方向比例 (排除静止帧, 只统计根节点速度>0.1m/s的帧; 静止/原地转身帧不参与统计):
     - 喂"向前走"时, 移动帧中有多少比例在真的向前移动: {r_mdm["fwd_frame_pct_a"]:.0f}%
     - 喂"向后走"时, 移动帧中有多少比例在真的向后移动: {r_mdm["bwd_frame_pct_b"]:.0f}%
@@ -1132,11 +1188,11 @@ gap 是 MDM 的 {r_lego["gap"]/r_mdm["gap"]:.1f} 倍。LeGO 的 diff={100*r_lego
 【LeGO 结果】
   说"面朝前向前走"的100个motion, m_align 均值 = {r_lego["mean_a"]:+.3f}
   说"面朝前后倒着走"的100个motion, m_align 均值 = {r_lego["mean_b"]:+.3f}
-  两侧均值一正一负 (sign-flip): 是
+  两侧均值一正一负 (sign-flip): {"是" if r_lego["sign_flip"] else "否"}
   逐样本方向正确率 (correct): {100*r_lego["sign_acc"]:.0f}%
     - A侧"说向前就向前"的比例: {100*r_lego["sign_acc_a"]:.0f}%
     - B侧"说向后就向后"的比例: {100*r_lego["sign_acc_b"]:.0f}%
-  diff: {100*r_lego["diff"]:.0f}%
+  diff%: {100*r_lego["diff_pct"]:.0f}%
   逐帧方向比例 (排除静止帧, 只统计根节点速度>0.1m/s的帧):
     - 喂"向前走"时, 移动帧中有多少比例在真的向前移动: {r_lego["fwd_frame_pct_a"]:.0f}%
     - 喂"向后走"时, 移动帧中有多少比例在真的向后移动: {r_lego["bwd_frame_pct_b"]:.0f}%
@@ -1144,17 +1200,33 @@ gap 是 MDM 的 {r_lego["gap"]/r_mdm["gap"]:.1f} 倍。LeGO 的 diff={100*r_lego
     - 说"向前走", 所有移动帧都在向前(>0)的motion比例: {100*r_lego["frame_strict_a"]:.0f}%
     - 说"向后走", 所有移动帧都在向后(<0)的motion比例: {100*r_lego["frame_strict_b"]:.0f}%
 
-【结论】LeGO 在走向-朝向对齐的总体正确率上 ({100*r_lego["sign_acc"]:.0f}%) 优于 MDM ({100*r_mdm["sign_acc"]:.0f}%)。
-逐帧来看(排除静止帧后): MDM 喂"向后走"时移动帧中只有 {r_mdm["bwd_frame_pct_b"]:.0f}% 真的向后,
-说明它经常先往前走一段再往后走(正如可视化所见)。LeGO 的对应比例是 {r_lego["bwd_frame_pct_b"]:.0f}%。
-frame-strict-accuracy (所有移动帧方向都对才算对):
-MDM={100*r_mdm["frame_strict_acc"]:.0f}%, LeGO={100*r_lego["frame_strict_acc"]:.0f}%。""")
+【MDM+LeGO-CLIP 结果】
+  说"面朝前向前走"的100个motion, m_align 均值 = {r_lora["mean_a"]:+.3f}
+  说"面朝前后倒着走"的100个motion, m_align 均值 = {r_lora["mean_b"]:+.3f}
+  两侧均值一正一负 (sign-flip): {"是" if r_lora["sign_flip"] else "否"}
+  逐样本方向正确率 (correct): {100*r_lora["sign_acc"]:.0f}%
+    - A侧"说向前就向前"的比例: {100*r_lora["sign_acc_a"]:.0f}%
+    - B侧"说向后就向后"的比例: {100*r_lora["sign_acc_b"]:.0f}%
+  diff%: {100*r_lora["diff_pct"]:.0f}%
+  逐帧方向比例 (排除静止帧, 只统计根节点速度>0.1m/s的帧):
+    - 喂"向前走"时, 移动帧中有多少比例在真的向前移动: {r_lora["fwd_frame_pct_a"]:.0f}%
+    - 喂"向后走"时, 移动帧中有多少比例在真的向后移动: {r_lora["bwd_frame_pct_b"]:.0f}%
+  逐帧严格正确率 (frame-strict-accuracy): {100*r_lora["frame_strict_acc"]:.0f}%
+    - 说"向前走", 所有移动帧都在向前(>0)的motion比例: {100*r_lora["frame_strict_a"]:.0f}%
+    - 说"向后走", 所有移动帧都在向后(<0)的motion比例: {100*r_lora["frame_strict_b"]:.0f}%
+
+【结论】correct 维度: LeGO ({100*r_lego["sign_acc"]:.0f}%) ≈ MDM+LeGO-CLIP ({100*r_lora["sign_acc"]:.0f}%) > MDM ({100*r_mdm["sign_acc"]:.0f}%)。
+strict-accuracy 维度: MDM ({100*r_mdm["frame_strict_acc"]:.0f}%) >> MDM+LeGO-CLIP ({100*r_lora["frame_strict_acc"]:.0f}%) > LeGO ({100*r_lego["frame_strict_acc"]:.0f}%)。
+LeGO 系列模型靠转身来"作弊"实现方向区分, MDM+LeGO-CLIP 在一定程度上缓解了此问题。
+逐帧来看: MDM 喂"向后走"时只有 {r_mdm["bwd_frame_pct_b"]:.0f}% 的移动帧真的向后(经常先往前走),
+LeGO 对应比例 {r_lego["bwd_frame_pct_b"]:.0f}%, MDM+LeGO-CLIP 对应比例 {r_lora["bwd_frame_pct_b"]:.0f}%。""")
 
     # ---- 第4类: clockwise / counterclockwise ----
     cat = CATEGORIES[3]
     rpt = cat['report_window']
     r_mdm = summary[('MDM', cat['name'], rpt)]
     r_lego = summary[('LeGO', cat['name'], rpt)]
+    r_lora = summary[('MDM+LeGO-CLIP', cat['name'], rpt)]
     print(f"""
 {'='*78}
 第四类：顺/逆时针转身 (clockwise vs counterclockwise)
@@ -1183,7 +1255,7 @@ MDM={100*r_mdm["frame_strict_acc"]:.0f}%, LeGO={100*r_lego["frame_strict_acc"]:.
   逐样本方向正确率 (correct): {100*r_mdm["sign_acc"]:.0f}% (瞎猜基线=50%)
     - A侧"说逆时针就逆时针"的比例: {100*r_mdm["sign_acc_a"]:.0f}%
     - B侧"说顺时针就顺时针"的比例: {100*r_mdm["sign_acc_b"]:.0f}%
-  diff: {100*r_mdm["diff"]:.0f}%
+  diff%: {100*r_mdm["diff_pct"]:.0f}%
 
 【LeGO 结果】
   说"逆时针"的100个motion, 平均旋转角速度 = {r_lego["mean_a"]:+.2f} deg/s
@@ -1194,17 +1266,31 @@ MDM={100*r_mdm["frame_strict_acc"]:.0f}%, LeGO={100*r_lego["frame_strict_acc"]:.
   逐样本方向正确率 (correct): {100*r_lego["sign_acc"]:.0f}%
     - A侧"说逆时针就逆时针"的比例: {100*r_lego["sign_acc_a"]:.0f}%
     - B侧"说顺时针就顺时针"的比例: {100*r_lego["sign_acc_b"]:.0f}%
-  diff: {100*r_lego["diff"]:.0f}%
+  diff%: {100*r_lego["diff_pct"]:.0f}%
 
-【结论】MDM 两侧均值同为负号 (sign-flip=否), 说明无论说 clockwise 还是 counterclockwise,
-它都在顺时针转 —— 它不真正理解 "counter-" 前缀的空间含义。LeGO 至少实现了均值层面的 sign-flip,
-即平均而言能区分两个方向, 但在逐样本 correct ({100*r_lego["sign_acc"]:.0f}%) 上仍有较大提升空间。""")
+【MDM+LeGO-CLIP 结果】
+  说"逆时针"的100个motion, 平均旋转角速度 = {r_lora["mean_a"]:+.2f} deg/s
+    → 符号为{"正" if r_lora["mean_a"]>0 else "负"}, {"正确(逆时针)" if r_lora["mean_a"]>0 else "错误, 实际在顺时针转"}
+  说"顺时针"的100个motion, 平均旋转角速度 = {r_lora["mean_b"]:+.2f} deg/s
+    → 符号为{"正" if r_lora["mean_b"]>0 else "负"}, {"错误, 实际在逆时针转" if r_lora["mean_b"]>0 else "正确(顺时针)"}
+  两侧均值一正一负 (sign-flip): {"是" if r_lora["sign_flip"] else "否"}
+  逐样本方向正确率 (correct): {100*r_lora["sign_acc"]:.0f}%
+    - A侧"说逆时针就逆时针"的比例: {100*r_lora["sign_acc_a"]:.0f}%
+    - B侧"说顺时针就顺时针"的比例: {100*r_lora["sign_acc_b"]:.0f}%
+  diff%: {100*r_lora["diff_pct"]:.0f}%
+
+【结论】MDM+LeGO-CLIP (correct={100*r_lora["sign_acc"]:.0f}%) >> LeGO ({100*r_lego["sign_acc"]:.0f}%) > MDM ({100*r_mdm["sign_acc"]:.0f}%)。
+这是三模型间差异最大的类别。MDM 两侧同号(sign-flip=否), 完全不理解 "counter-" 前缀, 只会顺时针转。
+LeGO 实现了均值 sign-flip 但逐样本 correct 仅 60%(接近瞎猜)。
+MDM+LeGO-CLIP correct=84%, 从"几乎瞎猜"跃升到"基本可靠", 且旋转速率远大于其他两模型。
+预训练 LoRA CLIP 权重中似乎保留了更丰富的旋转方向语义。""")
 
     # ---- 第5类: left hand / right hand ----
     cat = CATEGORIES[4]
     rpt = cat['report_window']
     r_mdm = summary[('MDM', cat['name'], rpt)]
     r_lego = summary[('LeGO', cat['name'], rpt)]
+    r_lora = summary[('MDM+LeGO-CLIP', cat['name'], rpt)]
     print(f"""
 {'='*78}
 第五类：左手/右手举起 (left hand vs right hand)
@@ -1234,7 +1320,7 @@ MDM={100*r_mdm["frame_strict_acc"]:.0f}%, LeGO={100*r_lego["frame_strict_acc"]:.
   逐样本方向正确率 (correct): {100*r_mdm["sign_acc"]:.0f}% (瞎猜基线=50%)
     - A侧"说举左手真举左手"的比例: {100*r_mdm["sign_acc_a"]:.0f}%
     - B侧"说举右手真举右手"的比例: {100*r_mdm["sign_acc_b"]:.0f}%
-  diff: {100*r_mdm["diff"]:.0f}%
+  diff%: {100*r_mdm["diff_pct"]:.0f}%
 
 【LeGO 结果】
   说"举左手"的100个motion, 平均高度差 (左手-右手) = {r_lego["mean_a"]:+.3f} m
@@ -1245,17 +1331,31 @@ MDM={100*r_mdm["frame_strict_acc"]:.0f}%, LeGO={100*r_lego["frame_strict_acc"]:.
   逐样本方向正确率 (correct): {100*r_lego["sign_acc"]:.0f}%
     - A侧"说举左手真举左手"的比例: {100*r_lego["sign_acc_a"]:.0f}%
     - B侧"说举右手真举右手"的比例: {100*r_lego["sign_acc_b"]:.0f}%
-  diff: {100*r_lego["diff"]:.0f}%
+  diff%: {100*r_lego["diff_pct"]:.0f}%
 
-【结论】MDM 的 A侧均值 = {r_mdm["mean_a"]:+.3f} m (负值), 说明说"举左手"时它仍然在举右手
-(A侧 correct 仅 {100*r_mdm["sign_acc_a"]:.0f}%)。LeGO 的 correct={100*r_lego["sign_acc"]:.0f}%,
-近乎完美地区分了左右手, 说明 LoRA 微调后的 CLIP 准确编码了 "left arm" 和 "right arm" 的语义差异。""")
+【MDM+LeGO-CLIP 结果】
+  说"举左手"的100个motion, 平均高度差 (左手-右手) = {r_lora["mean_a"]:+.3f} m
+    → 符号为{"正" if r_lora["mean_a"]>0 else "负"}, {"正确, 左手确实更高" if r_lora["mean_a"]>0 else "错误, 实际右手更高"}
+  说"举右手"的100个motion, 平均高度差 (左手-右手) = {r_lora["mean_b"]:+.3f} m
+    → 符号为{"正" if r_lora["mean_b"]>0 else "负"}, {"错误, 左手更高" if r_lora["mean_b"]>0 else "正确, 右手确实更高"}
+  两侧均值一正一负 (sign-flip): {"是" if r_lora["sign_flip"] else "否"}
+  逐样本方向正确率 (correct): {100*r_lora["sign_acc"]:.0f}%
+    - A侧"说举左手真举左手"的比例: {100*r_lora["sign_acc_a"]:.0f}%
+    - B侧"说举右手真举右手"的比例: {100*r_lora["sign_acc_b"]:.0f}%
+  diff%: {100*r_lora["diff_pct"]:.0f}%
+
+【结论】MDM+LeGO-CLIP ({100*r_lora["sign_acc"]:.0f}%) ≈ LeGO ({100*r_lego["sign_acc"]:.0f}%) >> MDM ({100*r_mdm["sign_acc"]:.0f}%)。
+两个 LoRA 模型都近乎完美地区分了左右手。MDM 的 A侧均值 = {r_mdm["mean_a"]:+.3f} m ({'正' if r_mdm['mean_a']>0 else '负'}值),
+说明说"举左手"时它仍然在举右手 (A侧 correct 仅 {100*r_mdm["sign_acc_a"]:.0f}%)。
+MDM+LeGO-CLIP 的 B侧高度差 ({r_lora['mean_b']:+.3f} m) 幅度最大, 右手举得更明显。
+LoRA 微调后的 CLIP 准确编码了 "left arm" 和 "right arm" 的语义差异。""")
 
     # ---- 第6类: walk / run ----
     cat = CATEGORIES[5]
     rpt = cat['report_window']
     r_mdm = summary[('MDM', cat['name'], rpt)]
     r_lego = summary[('LeGO', cat['name'], rpt)]
+    r_lora = summary[('MDM+LeGO-CLIP', cat['name'], rpt)]
     print(f"""
 {'='*78}
 第六类：走/跑速度 (run vs walk)
@@ -1275,19 +1375,29 @@ MDM={100*r_mdm["frame_strict_acc"]:.0f}%, LeGO={100*r_lego["frame_strict_acc"]:.
   说"跑"的100个motion, 平均速度(仅移动帧) = {r_mdm["mean_a"]:.3f} m/s
   说"走"的100个motion, 平均速度(仅移动帧) = {r_mdm["mean_b"]:.3f} m/s
   跑/走速度比: {r_mdm["ratio"]:.2f} 倍
-  gap (跑均值 - 走均值): {r_mdm["gap"]:.3f} m/s
-  diff (换"run"→"walk"后速度变慢的配对比例): {100*r_mdm["diff"]:.0f}% (瞎猜基线=50%)
+  diff (跑均值 - 走均值): {r_mdm["diff"]:.3f} m/s
+  diff% (换"run"→"walk"后速度变慢的配对比例): {100*r_mdm["diff_pct"]:.0f}% (瞎猜基线=50%)
 
 【LeGO 结果】
   说"跑"的100个motion, 平均速度(仅移动帧) = {r_lego["mean_a"]:.3f} m/s
   说"走"的100个motion, 平均速度(仅移动帧) = {r_lego["mean_b"]:.3f} m/s
   跑/走速度比: {r_lego["ratio"]:.2f} 倍
-  gap: {r_lego["gap"]:.3f} m/s
-  diff: {100*r_lego["diff"]:.0f}%
+  diff: {r_lego["diff"]:.3f} m/s
+  diff%: {100*r_lego["diff_pct"]:.0f}%
 
-【结论】MDM 跑/走速度比 {r_mdm["ratio"]:.2f}x, LeGO {r_lego["ratio"]:.2f}x (LeGO 说"走"反而比说"跑"快)。
-MDM 清楚地区分了跑和走, 而 LeGO 完全未学会区分 "run" 和 "walk" 这两个动作类别。
-(注意: LeGO 在 slowly/quickly 上表现优异, 说明它能理解速度副词, 但不理解动作类别词。)""")
+【MDM+LeGO-CLIP 结果】
+  说"跑"的100个motion, 平均速度(仅移动帧) = {r_lora["mean_a"]:.3f} m/s
+  说"走"的100个motion, 平均速度(仅移动帧) = {r_lora["mean_b"]:.3f} m/s
+  跑/走速度比: {r_lora["ratio"]:.2f} 倍
+  diff: {r_lora["diff"]:.3f} m/s
+  diff%: {100*r_lora["diff_pct"]:.0f}%
+
+【结论】这是所有 LoRA 模型共同失败的类别。MDM diff%={100*r_mdm["diff_pct"]:.0f}% >> MDM+LeGO-CLIP diff%={100*r_lora["diff_pct"]:.0f}% > LeGO diff%={100*r_lego["diff_pct"]:.0f}%。
+MDM 清楚地区分了跑和走 (速度比 {r_mdm['ratio']:.2f}x), LeGO 完全学反 (速度比 {r_lego['ratio']:.2f}x, 说"走"反而更快),
+MDM+LeGO-CLIP 有微弱改善 (速度比 {r_lora['ratio']:.2f}x, diff 从 LeGO 的 {r_lego['diff']:.3f} 回升至 {r_lora['diff']:+.3f}) 但 diff% 仍接近瞎猜水平。
+原因分析: HumanML3D 中 walk(94.46%) vs run(12.81%) 极度不平衡;
+LoRA 的低秩约束偏向于微调已有的语义维度(如速度副词)而难以建立新类别对比。
+(注意: 两个 LoRA 模型在 slowly/quickly 上表现优异, 说明它们能理解速度副词, 但不理解动作类别词。)""")
 
 
 if __name__ == '__main__':

@@ -266,12 +266,19 @@ def load_ckpt(net, ckpt_path, key=None, strict=True, filter=False):
     if ckpt_path is None:
         return
     ckpt = torch.load(ckpt_path, map_location='cpu')
+    
+    if 'clip_lora' in ckpt.keys():
+        missing_keys, unexpected_keys = net.load_state_dict(ckpt['clip_lora'], strict=False)
+        assert len(unexpected_keys) == 0, unexpected_keys
+        print('=== successfully load lora weights')
+
     if key:
         ckpt = ckpt[key]
         
     if strict:
         missing_keys, unexpected_keys = net.load_state_dict(ckpt, strict=strict)
     else:
+
         # 去掉module
         if 'module' in list(ckpt.keys())[0]:
             new_ckpt = {}
