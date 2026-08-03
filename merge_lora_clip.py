@@ -155,7 +155,7 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
-    args.lora_checkpoint_path = 'output/0814_MDMCLIPlora_cl10_tcl2_0716_scratch_ricglobal1/net_best.pth'
+    args.lora_checkpoint_path = 'output/_0731_LEGO_snap_cl10_tcl2_evaluator292_pret/net_best.pth'
     args.output_path = args.lora_checkpoint_path.replace(os.path.basename(args.lora_checkpoint_path), 'merged_clip.pth')
     if os.path.exists(args.output_path):
         raise FileExistsError(f"Output file {args.output_path} already exists. ")

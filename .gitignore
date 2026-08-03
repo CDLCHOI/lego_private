@@ -11,3 +11,4 @@ checkpoints/
 *.pth
 *.out
 *.csv
+*.txt

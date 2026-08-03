@@ -43,8 +43,9 @@ TEST_FILE = './dataset/HumanML3D/test.txt'
 DATA_ROOT = './dataset/HumanML3D'
 
 # net1 (MDM, 无 LoRA) 和 net2 (LeGO, 有 CLIP LoRA) 的 checkpoint 路径
-CKPT_MDM  = 'output/0814_MDMCLIP_b128/net_best.pth'
-CKPT_LEGO = 'output/0911_MDMCLIP_preatrainlora_ric1_b64/net_best.pth'
+CKPT_MDM   = 'output/0814_MDMCLIP_b128/net_best.pth'
+CKPT_LEGO  = 'output/0911_MDMCLIP_preatrainlora_ric1_b64/net_best.pth'
+CKPT_LEGO2 = 'output/0814_MDMCLIPlora_cl10_tcl2_0716_scratch/net_best.pth'
 
 BATCH_SIZE = 32
 DIFFUSION_STEPS = 50
@@ -380,12 +381,13 @@ def compute_fid_from_embeddings(gen_embeddings, gt_mu, gt_cov):
 # ═══════════════════════════════════════════════════════════════
 
 def evaluate_category(args, category_name, category_ids, net1, diffusion1,
-                      net2, diffusion2, eval_wrapper, no_cache=False):
+                      net2, diffusion2, net3, diffusion3, eval_wrapper, no_cache=False):
     """
     对单个文本长度类别进行评估：
     1. 创建 gt_loader 和 gen_loader
     2. 用 MDM (net1) 生成 motion → 计算 R_precision / FID
     3. 用 LeGO (net2) 生成 motion → 计算 R_precision / FID
+    4. 用 LeGO2 (net3) 生成 motion → 计算 R_precision / FID
     """
     print(f'\n{"=" * 60}')
     print(f'[评估] 类别: {category_name}  样本数: {len(category_ids)}')
@@ -393,7 +395,7 @@ def evaluate_category(args, category_name, category_ids, net1, diffusion1,
 
     if len(category_ids) < BATCH_SIZE:
         print(f'[警告] {category_name} 样本数 ({len(category_ids)}) < batch_size ({BATCH_SIZE})，跳过！')
-        return {'R_precision': None, 'FID': None}, {'R_precision': None, 'FID': None}
+        return {'R_precision': None, 'FID': None}, {'R_precision': None, 'FID': None}, {'R_precision': None, 'FID': None}
 
     # ── 创建 DataLoader ──
     # GT: mode='gt' → 评估器空间 (t2m_mean.npy/t2m_std.npy)
@@ -410,10 +412,11 @@ def evaluate_category(args, category_name, category_ids, net1, diffusion1,
 
     results = {}
 
-    # ── 分别对 MDM 和 LeGO 生成并评估 ──
+    # ── 分别对 MDM、LeGO、LeGO2 生成并评估 ──
     for model_name, net, diffusion in [
         ('MDM', net1, diffusion1),
         ('LeGO', net2, diffusion2),
+        ('LeGO2', net3, diffusion3),
     ]:
         model_tag = f'{category_name}_{model_name}'
         cache_path = os.path.join(CACHE_DIR, f'{model_name}_{category_name}_motions.pt') if not no_cache else None
@@ -459,7 +462,7 @@ def evaluate_category(args, category_name, category_ids, net1, diffusion1,
         del gen_motions, gen_dataset, gen_motion_loader, gen_embeddings
         torch.cuda.empty_cache()
 
-    return results['MDM'], results['LeGO']
+    return results['MDM'], results['LeGO'], results['LeGO2']
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -539,7 +542,10 @@ def main():
     print('[2.2] 构建 LeGO (net2, 有 CLIP LoRA) ...')
     net2, diffusion2 = build_model(args, CKPT_LEGO, use_lora=True)
 
-    print('[2.3] 构建 Evaluator (GRU) ...')
+    print('[2.3] 构建 LeGO2 (net3, 有 CLIP LoRA, scratch) ...')
+    net3, diffusion3 = build_model(args, CKPT_LEGO2, use_lora=True)
+
+    print('[2.4] 构建 Evaluator (GRU) ...')
     eval_wrapper = EvaluatorMDMWrapper(args.dataset_name, torch.device('cuda'), args, args.evaluator_eval)
 
     # ═══════════════════════════════════════════════════
@@ -556,12 +562,12 @@ def main():
         ('medium', medium_ids),
         ('long', long_ids),
     ]:
-        mdm_res, lego_res = evaluate_category(
+        mdm_res, lego_res, lego2_res = evaluate_category(
             args, cat_name, cat_ids,
-            net1, diffusion1, net2, diffusion2, eval_wrapper,
+            net1, diffusion1, net2, diffusion2, net3, diffusion3, eval_wrapper,
             no_cache=no_cache,
         )
-        all_results[cat_name] = {'MDM': mdm_res, 'LeGO': lego_res}
+        all_results[cat_name] = {'MDM': mdm_res, 'LeGO': lego_res, 'LeGO2': lego2_res}
 
     # ═══════════════════════════════════════════════════
     # 4. 汇总输出
@@ -581,7 +587,7 @@ def main():
         f.write(sep + '\n')
 
         for cat_name in ['short', 'medium', 'long']:
-            for model_name in ['MDM', 'LeGO']:
+            for model_name in ['MDM', 'LeGO', 'LeGO2']:
                 res = all_results[cat_name][model_name]
                 if res['R_precision'] is not None:
                     rp = res['R_precision']

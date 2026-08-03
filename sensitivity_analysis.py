@@ -1,5 +1,5 @@
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '6'
+os.environ['CUDA_VISIBLE_DEVICES'] = '4'
 import numpy as np
 import torch
 import clip
@@ -245,46 +245,49 @@ def calc_avg_text_length_and_draw(sim_array, paired_texts, sample_text_filename,
 
 def plot_similarity_histogram(sim_array, save_path="similarity_histogram.png", bins=80):
     """
-    绘制原始CLIP和AdaCLIP的余弦相似度柱状图
-    
+    绘制原始CLIP、LeGO-CLIP、LeGO-CLIP-SnapMoGen和LAMP的余弦相似度柱状图
+
     Args:
-        sim_array: 形状为(N,2)的numpy数组，第一列是原始CLIP的相似度，第二列是AdaCLIP的相似度
+        sim_array: 形状为(N,4)的numpy数组，第0列CLIP，第1列LeGO-CLIP，第2列LeGO-CLIP-SnapMoGen，第3列LAMP
         save_path: 图像保存路径
         bins: 直方图的柱子数量
     """
-    # 提取原始CLIP和AdaCLIP的相似度数据
+    # 提取四个模型的相似度数据
     clip_similarities = sim_array[:, 0]
-    adaclip_similarities = sim_array[:, 1]
-    if sim_array.shape[1] == 3:
-        lamp_similarities = sim_array[:, 2]
-    
+    legoclip_similarities = sim_array[:, 1]
+    legoclip_snapmogen_similarities = sim_array[:, 2]
+    lamp_similarities = sim_array[:, 3]
+
     # 设置直方图参数
     range_min = 0.2
     range_max = 1.0
     bin_edges = np.linspace(range_min, range_max, bins + 1)
-    
+
     # 绘制直方图
     plt.figure(figsize=(8, 4))
-    
+
     # 原始CLIP用蓝色
     plt.hist(clip_similarities, bins=bin_edges, alpha=0.7, color='#73D4F7', label='Vanilla CLIP')
-    
-    # AdaCLIP用红色
-    plt.hist(adaclip_similarities, bins=bin_edges, alpha=0.7, color='#FF7373', label='AdaCLIP')
+
+    # LeGO-CLIP用红色
+    plt.hist(legoclip_similarities, bins=bin_edges, alpha=0.7, color='#FF7373', label='LeGO-CLIP')
+
+    # LeGO-CLIP-SnapMoGen用橙色
+    plt.hist(legoclip_snapmogen_similarities, bins=bin_edges, alpha=0.7, color='#FF8C00', label='LeGO-CLIP-SnapMoGen')
 
     # LAMP用绿色
     plt.hist(lamp_similarities, bins=bin_edges, alpha=0.7, color='#73F773', label='LAMP')
-    
+
     # 设置坐标轴范围和标签
     plt.xlim(range_min, range_max)
     plt.xlabel('Cosine Similarity', fontsize=12)
     plt.ylabel('Frequency', fontsize=12)
-    
+
     # 添加标题、图例和网格线
-    plt.title('Cosine Similarity Distribution between Vanilla CLIP and AdaCLIP', fontsize=14)
+    plt.title('Cosine Similarity Distribution', fontsize=14)
     plt.legend(fontsize=10)
     plt.grid(True, linestyle='--', alpha=0.3)
-    
+
     # 保存图像
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
@@ -293,90 +296,100 @@ def plot_similarity_histogram(sim_array, save_path="similarity_histogram.png", b
 def plot_3d_similarity_histogram(sim_array, save_path="3d_similarity_histogram.png", bins=80):
     """
     绘制三维余弦相似度频数分布柱状图
-    
+
     Args:
-        sim_array: 形状为(N,3)的numpy数组，列依次对应原始CLIP、AdaCLIP、LAMP的相似度
+        sim_array: 形状为(N,4)的numpy数组，列依次对应原始CLIP、LeGO-CLIP、LeGO-CLIP-SnapMoGen、LAMP的相似度
         save_path: 图像保存路径
         bins: 直方图的柱子数量（每个维度）
     """
-    # 确保输入包含三个模型的数据
-    if sim_array.shape[1] != 3:
-        raise ValueError("3D直方图需要包含三个模型的相似度数据（CLIP, AdaCLIP, LAMP）")
-    
-    # 提取三个模型的相似度数据
+    # 确保输入包含四个模型的数据
+    if sim_array.shape[1] != 4:
+        raise ValueError("3D直方图需要包含四个模型的相似度数据（CLIP, LeGO-CLIP, LeGO-CLIP-SnapMoGen, LAMP）")
+
+    # 提取四个模型的相似度数据
     clip_sim = sim_array[:, 0]
-    adaclip_sim = sim_array[:, 1]
-    lamp_sim = sim_array[:, 2]
-    
+    legoclip_sim = sim_array[:, 1]
+    legoclip_snapmogen_sim = sim_array[:, 2]
+    lamp_sim = sim_array[:, 3]
+
     # 设置相似度范围
     range_min = 0.2
     range_max = 1.0
-    
+
     # 创建3D图形
     fig = plt.figure(figsize=(12, 8))
     ax = fig.add_subplot(111, projection='3d')
-    
+
     # 计算每个模型的直方图
     clip_counts, clip_edges = np.histogram(clip_sim, bins=bins, range=(range_min, range_max))
-    adaclip_counts, adaclip_edges = np.histogram(adaclip_sim, bins=bins, range=(range_min, range_max))
+    legoclip_counts, legoclip_edges = np.histogram(legoclip_sim, bins=bins, range=(range_min, range_max))
+    legoclip_snapmogen_counts, legoclip_snapmogen_edges = np.histogram(legoclip_snapmogen_sim, bins=bins, range=(range_min, range_max))
     lamp_counts, lamp_edges = np.histogram(lamp_sim, bins=bins, range=(range_min, range_max))
     # 数量大于2600统一设置为2600
     clip_counts[clip_counts > 2600] = 2600
+    legoclip_counts[legoclip_counts > 2600] = 2600
+    legoclip_snapmogen_counts[legoclip_snapmogen_counts > 2600] = 2600
     lamp_counts[lamp_counts > 2600] = 2600
-    
+
     # 计算每个bin的中心位置
     clip_centers = (clip_edges[:-1] + clip_edges[1:]) / 2
+    legoclip_centers = (legoclip_edges[:-1] + legoclip_edges[1:]) / 2
+    legoclip_snapmogen_centers = (legoclip_snapmogen_edges[:-1] + legoclip_snapmogen_edges[1:]) / 2
     lamp_centers = (lamp_edges[:-1] + lamp_edges[1:]) / 2
-    adaclip_centers = (adaclip_edges[:-1] + adaclip_edges[1:]) / 2
-    
+
     # 设置每个模型在Z轴上的位置（用于区分）
     ytick_clip = 0
-    ytick_lamp = 0.5
-    ytick_adaclip = 1
+    ytick_legoclip = 0.33
+    ytick_legoclip_snapmogen = 0.67
+    ytick_lamp = 1.0
 
     z_pos_clip = np.ones_like(clip_centers) * ytick_clip
+    z_pos_legoclip = np.ones_like(legoclip_centers) * ytick_legoclip
+    z_pos_legoclip_snapmogen = np.ones_like(legoclip_snapmogen_centers) * ytick_legoclip_snapmogen
     z_pos_lamp = np.ones_like(lamp_centers) * ytick_lamp
-    z_pos_adaclip = np.ones_like(adaclip_centers) * ytick_adaclip
-    
-    
-    bar_width = (range_max - range_min) / bins   
+
+
+    bar_width = (range_max - range_min) / bins
     # 绘制3D柱状图
     # Vanilla CLIP (蓝色)
-    ax.bar(clip_centers, clip_counts, zs=z_pos_clip, zdir='y', 
+    ax.bar(clip_centers, clip_counts, zs=z_pos_clip, zdir='y',
            width=bar_width, color='#1D1DFF', alpha=0.8, label='Vanilla CLIP')
-    
-    
+
+    # LeGO-CLIP (红色)
+    ax.bar(legoclip_centers, legoclip_counts, zs=z_pos_legoclip, zdir='y',
+           width=bar_width, color='#FF3D02', alpha=0.8, label='LeGO-CLIP')
+
+    # LeGO-CLIP-SnapMoGen (橙色)
+    ax.bar(legoclip_snapmogen_centers, legoclip_snapmogen_counts, zs=z_pos_legoclip_snapmogen, zdir='y',
+           width=bar_width, color='#FF8C00', alpha=0.8, label='LeGO-CLIP-SnapMoGen')
+
     # LAMP (绿色)
-    ax.bar(lamp_centers, lamp_counts, zs=z_pos_lamp, zdir='y', 
+    ax.bar(lamp_centers, lamp_counts, zs=z_pos_lamp, zdir='y',
            width=bar_width, color='#17C913', alpha=0.8, label='LAMP')
-    
-    # AdaCLIP (红色)
-    ax.bar(adaclip_centers, adaclip_counts, zs=z_pos_adaclip, zdir='y', 
-           width=bar_width, color='#FF3D02', alpha=0.8, label='LEGO-CLIP')
-    
-    
+
+
     # 设置坐标轴标签
     ax.set_xlabel('Cosine Similarity', fontsize=12, fontweight='bold', labelpad=10)
     ax.set_ylabel('Model', fontsize=12, fontweight='bold', labelpad=10)
     ax.set_zlabel('Frequency', fontsize=12, fontweight='bold', labelpad=10)
-    
+
     ax.set_ylim(0, 1.2)
     ax.set_zlim(0, 2700)
-    
-    
+
+
     # 设置Y轴刻度和标签（对应不同模型）
-    ax.set_yticks([ytick_clip, ytick_lamp, ytick_adaclip])
-    ax.set_yticklabels(['Vanilla CLIP', 'LAMP', 'LeGO-CLIP'])
-    
+    ax.set_yticks([ytick_clip, ytick_legoclip, ytick_legoclip_snapmogen, ytick_lamp])
+    ax.set_yticklabels(['Vanilla CLIP', 'LeGO-CLIP', 'LeGO-CLIP-SnapMoGen', 'LAMP'])
+
     # 设置X轴范围
     ax.set_xlim(range_min, range_max)
     # 添加标题和图例
     # ax.set_title('3D Cosine Similarity Distribution', fontsize=14, pad=20)
     ax.legend(fontsize=10, loc='upper right', bbox_to_anchor=(1.0,0.9))
-    
+
     # 调整视角
     ax.view_init(elev=20, azim=45)
-    
+
     # 保存图像
     plt.tight_layout()
     plt.show()
@@ -386,40 +399,43 @@ def plot_3d_similarity_histogram(sim_array, save_path="3d_similarity_histogram.p
 
 def plot_similarity_by_text_length(sim_array, paired_texts, save_path):
     """
-    绘制横坐标为文本长度、纵坐标为平均相似度的折线图，包含CLIP（第0维）、LAMP（第1维）、AdaCLIP（第2维）三条折线
-    
+    绘制横坐标为文本长度、纵坐标为平均相似度的折线图，包含CLIP、LeGO-CLIP、LeGO-CLIP-SnapMoGen、LAMP四条折线
+
     Args:
-        sim_array: 形状为(N,3)的numpy数组，第一列是CLIP的相似度，第二列是AdaCLIP的相似度，第三列是LAMP的相似度
+        sim_array: 形状为(N,4)的numpy数组，第0列CLIP，第1列LeGO-CLIP，第2列LeGO-CLIP-SnapMoGen，第3列LAMP
         paired_texts: 形状为(N,2)的文本对列表
         save_path: 图像保存路径
     """
     assert len(sim_array) == len(paired_texts), f"sim_array length {len(sim_array)} != paired_texts length {len(paired_texts)}"
-    
+
     # 收集每个文本长度对应的相似度
     length_to_similarities = {}
-    
+
     for i in range(sim_array.shape[0]):
         # 计算文本长度（使用第一个文本的单词数）
         text_length = len(paired_texts[i][0].strip().split())
-        
-        # 获取三个模型的相似度
+
+        # 获取四个模型的相似度
         clip_sim = sim_array[i, 0]
-        adaclip_sim = sim_array[i, 1]
-        lamp_sim = sim_array[i, 2]
-        
+        legoclip_sim = sim_array[i, 1]
+        legoclip_snapmogen_sim = sim_array[i, 2]
+        lamp_sim = sim_array[i, 3]
+
         # 将相似度添加到对应文本长度的列表中
         if text_length not in length_to_similarities:
             length_to_similarities[text_length] = {
                 'clip': [],
-                'adaclip': [],
+                'legoclip': [],
+                'legoclip_snapmogen': [],
                 'lamp': []
             }
-        
+
         length_to_similarities[text_length]['clip'].append(clip_sim)
-        length_to_similarities[text_length]['adaclip'].append(adaclip_sim)
+        length_to_similarities[text_length]['legoclip'].append(legoclip_sim)
+        length_to_similarities[text_length]['legoclip_snapmogen'].append(legoclip_snapmogen_sim)
         length_to_similarities[text_length]['lamp'].append(lamp_sim)
-    
-    sorted_items = sorted(length_to_similarities.items(), key=lambda x: x[0]) 
+
+    sorted_items = sorted(length_to_similarities.items(), key=lambda x: x[0])
     sorted_length_to_similarities = dict(sorted_items)
 
 
@@ -434,37 +450,40 @@ def plot_similarity_by_text_length(sim_array, paired_texts, save_path):
 
     # 计算每个文本长度下的平均相似度
     avg_clip_sims = []
-    avg_adaclip_sims = []
+    avg_legoclip_sims = []
+    avg_legoclip_snapmogen_sims = []
     avg_lamp_sims = []
-    
+
     for length in valid_text_lengths:
         sims = length_to_similarities[length]
         avg_clip_sims.append(np.mean(sims['clip']))
-        avg_adaclip_sims.append(np.mean(sims['adaclip']))
+        avg_legoclip_sims.append(np.mean(sims['legoclip']))
+        avg_legoclip_snapmogen_sims.append(np.mean(sims['legoclip_snapmogen']))
         avg_lamp_sims.append(np.mean(sims['lamp']))
-    
+
     # 绘制折线图
     plt.figure(figsize=(10, 6))
-    
-    # 绘制三条折线
+
+    # 绘制四条折线
     plt.plot(valid_text_lengths, avg_clip_sims, marker='o', linestyle='-', color='#73D4F7', label='CLIP', linewidth=2)
+    plt.plot(valid_text_lengths, avg_legoclip_sims, marker='^', linestyle='-', color='#FF7373', label='LeGO-CLIP', linewidth=2)
+    plt.plot(valid_text_lengths, avg_legoclip_snapmogen_sims, marker='D', linestyle='-', color='#FF8C00', label='LeGO-CLIP-SnapMoGen', linewidth=2)
     plt.plot(valid_text_lengths, avg_lamp_sims, marker='s', linestyle='-', color='#73F773', label='LAMP', linewidth=2)
-    plt.plot(valid_text_lengths, avg_adaclip_sims, marker='^', linestyle='-', color='#FF7373', label='LEGO-CLIP', linewidth=2)
-    
+
     # 设置图表标题和坐标轴标签
     plt.xlabel('Text Length', fontsize=12)
     plt.ylabel('Average Cosine Similarity', fontsize=12)
-    
+
     # 添加图例
     plt.legend(fontsize=10)
-    
+
     # 添加网格线
     plt.grid(True, linestyle='--', alpha=0.3)
-    
+
     # 设置坐标轴范围
     plt.xlim(min(valid_text_lengths) - 1, max(valid_text_lengths) + 1)
     plt.ylim(0.3, 1.0)
-    
+
     # 保存图像
     plt.tight_layout()
     plt.savefig(save_path, dpi=300)
@@ -493,27 +512,35 @@ def test(clip_version, batch_size, max_samples):
     original_clip, _ = clip.load(clip_version, device='cpu', jit=False)
     original_clip = original_clip.cuda()
     
-    # 2. AdaCLIP
-    adaclip, _ = clip.load(clip_version, device='cpu', jit=False)
+    # 2. LeGO-CLIP
+    legoclip, _ = clip.load(clip_version, device='cpu', jit=False)
     merge_clip_key = torch.load('output/0814_MDMCLIPlora_cl10_tcl2_0716_scratch/merged_clip.pth')
-    missing_keys, unexpected_keys = adaclip.load_state_dict(merge_clip_key, strict=True)
-    adaclip = adaclip.cuda()
+    missing_keys, unexpected_keys = legoclip.load_state_dict(merge_clip_key, strict=True)
+    legoclip = legoclip.cuda()
 
-    # 3. LAMP
+    # 3. LeGO-CLIP-SnapMoGen
+    legoclip_snapmogen, _ = clip.load(clip_version, device='cpu', jit=False)
+    merge_clip_key_snap = torch.load('output/_0731_LEGO_snap_cl10_tcl2_evaluator292_pret/merged_clip.pth')
+    missing_keys, unexpected_keys = legoclip_snapmogen.load_state_dict(merge_clip_key_snap, strict=True)
+    legoclip_snapmogen = legoclip_snapmogen.cuda()
+
+    # 4. LAMP
     lamp = Net()
     lamp = lamp.cuda()
-    
+
     paired_texts, keyword_list = get_paired_text()
     sim_clip, sim_clip_array, clip_emb = calc_mean_similarity(paired_texts, original_clip, batch_size, max_samples)
-    sim_adaclip, sim_adaclip_array, adaclip_emb = calc_mean_similarity(paired_texts, adaclip, batch_size, max_samples)
+    sim_legoclip, sim_legoclip_array, legoclip_emb = calc_mean_similarity(paired_texts, legoclip, batch_size, max_samples)
+    sim_legoclip_snapmogen, sim_legoclip_snapmogen_array, legoclip_snapmogen_emb = calc_mean_similarity(paired_texts, legoclip_snapmogen, batch_size, max_samples)
     sim_lamp, sim_lamp_array, lamp_emb = calc_mean_similarity(paired_texts, lamp, batch_size, max_samples, is_lamp=True)
 
     print(f"Mean similarity original CLIP: {sim_clip:.4f}, std: {sim_clip_array.std():.4f}")
-    print(f"Mean similarity AdaCLIP: {sim_adaclip:.4f}, std: {sim_adaclip_array.std():.4f}")
+    print(f"Mean similarity LeGO-CLIP: {sim_legoclip:.4f}, std: {sim_legoclip_array.std():.4f}")
+    print(f"Mean similarity LeGO-CLIP-SnapMoGen: {sim_legoclip_snapmogen:.4f}, std: {sim_legoclip_snapmogen_array.std():.4f}")
     print(f"Mean similarity LAMP: {sim_lamp:.4f}, std: {sim_lamp_array.std():.4f}")
 
     # 由于batch size整除问题，这里统一长度
-    sim_array = np.stack((sim_clip_array, sim_adaclip_array, sim_lamp_array), axis=1)
+    sim_array = np.stack((sim_clip_array, sim_legoclip_array, sim_legoclip_snapmogen_array, sim_lamp_array), axis=1)
     min_len = min(sim_array.shape[0], len(paired_texts))
     sim_array = sim_array[:min_len]
     paired_texts = paired_texts[:min_len]
@@ -536,12 +563,12 @@ def test(clip_version, batch_size, max_samples):
 
     # with open(sim_array_filename, 'w') as f:
     for i in range(shuffled_sim_array.shape[0]):
-        # f.write(f"{shuffled_sim_array[i, 0]:.4f} {shuffled_sim_array[i, 2]:.4f} {shuffled_sim_array[i, 1]:.4f}\n")
+        # f.write(f"{shuffled_sim_array[i, 0]:.4f} {shuffled_sim_array[i, 3]:.4f} {shuffled_sim_array[i, 1]:.4f} {shuffled_sim_array[i, 2]:.4f}\n")
         sim = shuffled_sim_array[i, 1]
         idx = int(sim * 10)
         if count[idx] <= max_num_per_interval: # 每个区间最大数量
-            # ~ & sim_lip & sim_lamp & sim_adaclip & text
-            texts_for_save[idx].append(f"~ & {shuffled_sim_array[i, 0]:.3f} & {shuffled_sim_array[i, 2]:.3f} & {shuffled_sim_array[i, 1]:.3f} & {shuffled_keyword_list[i]} & {shuffled_paired_texts[i][0]} " + '\\\\')
+            # ~ & sim_clip & sim_lamp & sim_legoclip & sim_legoclip_snapmogen & keyword & text
+            texts_for_save[idx].append(f"~ & {shuffled_sim_array[i, 0]:.3f} & {shuffled_sim_array[i, 3]:.3f} & {shuffled_sim_array[i, 1]:.3f} & {shuffled_sim_array[i, 2]:.3f} & {shuffled_keyword_list[i]} & {shuffled_paired_texts[i][0]} " + '\\\\')
             count[idx] += 1
     # print(f'save {sim_array_filename}')
 
@@ -561,7 +588,8 @@ def test(clip_version, batch_size, max_samples):
 
     # tSNE画图
     # visualize_tsne(paired_texts, original_clip, "Original CLIP Embedding Space", "tsne_original.png", clip_emb)
-    # visualize_tsne(paired_texts, adaclip, "AdaCLIP Embedding Space", "tsne_adaclip.png", adaclip_emb)
+    # visualize_tsne(paired_texts, legoclip, "LeGO-CLIP Embedding Space", "tsne_legoclip.png", legoclip_emb)
+    # visualize_tsne(paired_texts, legoclip_snapmogen, "LeGO-CLIP-SnapMoGen Embedding Space", "tsne_legoclip_snapmogen.png", legoclip_snapmogen_emb)
     
     # 绘制相似度柱状图
     # plot_similarity_histogram(sim_array, save_path=f"sensitivity_histogram_{args.max_samples}_{'test' if args.only_test_set else 'all'}.pdf")
